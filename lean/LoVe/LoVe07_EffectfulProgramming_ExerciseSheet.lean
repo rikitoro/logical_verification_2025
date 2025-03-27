@@ -51,8 +51,9 @@ instance Option.LawfulMonadWithOrelse :
   { Option.LawfulMonad with
     emp          := Option.none
     orelse       := Option.orelse
-    emp_orelse   :=
-      sorry
+    emp_orelse   := by
+      intro α ma
+      rfl
     orelse_emp   :=
       by
         intro α ma
@@ -60,20 +61,26 @@ instance Option.LawfulMonadWithOrelse :
         cases ma
         { rfl }
         { rfl }
-    orelse_assoc :=
-      sorry
+    orelse_assoc := by
+      intro α ma mb mc
+      simp [Option.orelse]
+      cases ma with
+      | none => rfl
+      | some a => rfl
     emp_bind     :=
       by
         intro α β f
         simp [Bind.bind]
         rfl
-    bind_emp     :=
-      sorry
+    bind_emp     := by
+      intro α β f
+      simp
+
   }
 
 @[simp] theorem Option.some_bind {α β : Type} (a : α) (g : α → Option β) :
-    (Option.some a >>= g) = g a :=
-  sorry
+    (Option.some a >>= g) = g a := by
+  rfl
 
 /- 1.2. Now we are ready to define `FAction σ`: a monad with an internal state
 of type `σ` that can fail (unlike `Action σ`).
@@ -92,16 +99,16 @@ Hints:
   there for inspiration. -/
 
 def FAction (σ : Type) (α : Type) : Type :=
-  sorry
+  σ → Option (α × σ)
 
 /- 1.3. Define the `get` and `set` function for `FAction`, where `get` returns
 the state passed along the state monad and `set s` changes the state to `s`. -/
 
 def get {σ : Type} : FAction σ σ :=
-  sorry
+  fun s => pure (s, s)
 
 def set {σ : Type} (s : σ) : FAction σ Unit :=
-  sorry
+  fun _ => pure ((), s)
 
 /- We set up the `>>=` syntax on `FAction`: -/
 
@@ -121,7 +128,7 @@ theorem FAction.bind_apply {σ α β : Type} (f : FAction σ α)
 satisfy the three laws. -/
 
 def FAction.pure {σ α : Type} (a : α) : FAction σ α :=
-  sorry
+  fun s => .some (a, s)
 
 /- We set up the syntax for `pure` on `FAction`: -/
 
@@ -145,7 +152,8 @@ instance FAction.LawfulMonad {σ : Type} : LawfulMonad (FAction σ) :=
   { FAction.Bind, FAction.Pure with
     pure_bind :=
       by
-      sorry
+      intro α β a f
+      rfl
     bind_pure :=
       by
         intro α ma
@@ -180,19 +188,22 @@ Kleisli operator. -/
 
 theorem pure_kleisli {m : Type → Type} [LawfulMonad m] {α β : Type}
       (f : α → m β) :
-    (pure >=> f) = f :=
-  sorry
+    (pure >=> f) = f := by
+  unfold kleisli
+  simp [LawfulMonad.pure_bind]
 
 theorem kleisli_pure {m : Type → Type} [LawfulMonad m] {α β : Type}
       (f : α → m β) :
-    (f >=> pure) = f :=
-  sorry
+    (f >=> pure) = f := by
+  unfold kleisli
+  simp [LawfulMonad.bind_pure]
 
 /- 2.2 (**optional**). Prove that the Kleisli operator is associative. -/
 
 theorem kleisli_assoc {m : Type → Type} [LawfulMonad m] {α β γ δ : Type}
       (f : α → m β) (g : β → m γ) (h : γ → m δ) :
-    ((f >=> g) >=> h) = (f >=> (g >=> h)) :=
-  sorry
+    ((f >=> g) >=> h) = (f >=> (g >=> h)) := by
+  unfold kleisli
+  simp [LawfulMonad.bind_assoc]
 
 end LoVe
