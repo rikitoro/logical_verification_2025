@@ -36,13 +36,13 @@ constructing a term. By hovering over `_`, you will see the current logical
 context. -/
 
 def B : (α → β) → (γ → α) → γ → β :=
-  fun fab fca a ↦ fab <| fca a
+  fun f g c ↦ f (g c)
 
 def S : (α → β → γ) → (α → β) → α → γ :=
   fun f g a ↦ f a <| g a
 
 def moreNonsense : ((α → β) → γ → δ) → γ → β → δ :=
-  sorry
+  fun f c b ↦ f (fun _ ↦ b) c
 
 def evenMoreNonsense : (α → β) → (α → γ) → α → β → γ :=
   fun _ g a _ ↦ g a
@@ -55,7 +55,7 @@ follow the procedure described in the Hitchhiker's Guide.
 Note: Peirce is pronounced like the English word "purse". -/
 
 def weakPeirce : ((((α → β) → α) → α) → β) → β :=
-  sorry
+  fun f ↦ f fun g ↦ g fun a ↦ f fun _ ↦ a
 
 /- ## Question 2 (4 points): Typing Derivation
 
@@ -66,5 +66,22 @@ useful.
 Feel free to introduce abbreviations to avoid repeating large contexts `C`. -/
 
 -- write your solution here
+
+/-
+
+                          ——————————————————— VAR  ——————————————— VAR
+                            C ⊢ g : γ → α          C ⊢ c : γ
+—————————————————— VAR    ————————————————————————————————————————————— APP
+C ⊢ f : α → β                       C ⊢ g c : α                           (C := f : α → β, g : γ → α, c : γ ⊢ f (g c))
+———————————————————————————————————————————————————————————————————————— APP
+  f : α → β, g : γ → α, c : γ ⊢ f (g c) : β
+———————————————————————————————————————————————————————————————————————— FUN
+  f : α → β, g : γ → α ⊢ fun c ↦ f (g c) : γ → β
+———————————————————————————————————————————————————————————————————————— FUN
+  f : α → β ⊢ fun g c ↦ f (g c) : (γ → α) → γ → β
+———————————————————————————————————————————————————————————————————————— FUN
+  ⊢ fun f g c ↦ f (g c) : (α → β) → (γ → α) → γ → β
+
+-/
 
 end LoVe
