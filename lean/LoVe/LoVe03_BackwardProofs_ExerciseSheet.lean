@@ -25,36 +25,50 @@ Hint: Some strategies for carrying out such proofs are described at the end of
 Section 3.3 in the Hitchhiker's Guide. -/
 
 theorem I (a : Prop) :
-    a → a :=
-  sorry
+    a → a := by
+  intro ha
+  exact ha
+
 
 theorem K (a b : Prop) :
-    a → b → b :=
-  sorry
+    a → b → b := by
+  intro ha hb
+  exact hb
 
 theorem C (a b c : Prop) :
-    (a → b → c) → b → a → c :=
-  sorry
+    (a → b → c) → b → a → c := by
+  intro habc hb ha
+  apply habc
+  . apply ha
+  . apply hb
+
 
 theorem proj_fst (a : Prop) :
-    a → a → a :=
-  sorry
+    a → a → a := by
+  intro ha ha'
+  exact ha
+
 
 /- Please give a different answer than for `proj_fst`: -/
 
 theorem proj_snd (a : Prop) :
-    a → a → a :=
-  sorry
+    a → a → a := by
+  intro ha ha'
+  apply ha'
 
 theorem some_nonsense (a b c : Prop) :
-    (a → b → c) → a → (a → c) → b → c :=
-  sorry
+    (a → b → c) → a → (a → c) → b → c := by
+  intro habc ha hac hb
+  apply hac ha
+
 
 /- 1.2. Prove the contraposition rule using basic tactics. -/
 
 theorem contrapositive (a b : Prop) :
-    (a → b) → ¬ b → ¬ a :=
-  sorry
+    (a → b) → ¬ b → ¬ a := by
+  intro hab hnb ha
+  apply hnb
+  apply hab ha
 
 /- 1.3. Prove the distributivity of `∀` over `∧` using basic tactics.
 
@@ -63,9 +77,20 @@ forward reasoning, like in the proof of `and_swap_braces` in the lecture, might
 be necessary. -/
 
 theorem forall_and {α : Type} (p q : α → Prop) :
-    (∀x, p x ∧ q x) ↔ (∀x, p x) ∧ (∀x, q x) :=
-  sorry
-
+    (∀x, p x ∧ q x) ↔ (∀x, p x) ∧ (∀x, q x) := by
+  apply Iff.intro
+  . intro h
+    apply And.intro
+    . intro x
+      apply And.left
+      apply h
+    . intro x
+      apply And.right
+      apply h
+  . intro h x
+    apply And.intro
+    . apply And.left h
+    . apply And.right h
 
 /- ## Question 2: Natural Numbers
 
@@ -75,13 +100,18 @@ theorem forall_and {α : Type} (p q : α → Prop) :
 #check mul
 
 theorem mul_zero (n : ℕ) :
-    mul 0 n = 0 :=
-  sorry
+    mul 0 n = 0 := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp [mul, ih]
+    rfl
 
 #check add_succ
 theorem mul_succ (m n : ℕ) :
-    mul (Nat.succ m) n = add (mul m n) n :=
+    mul (Nat.succ m) n = add (mul m n) n := by
   sorry
+
 
 /- 2.2. Prove commutativity and associativity of multiplication using the
 `induction` tactic. Choose the induction variable carefully. -/
