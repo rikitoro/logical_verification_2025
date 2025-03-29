@@ -17,7 +17,7 @@ theorem fst_of_two_props :
   intro ha hb
   apply ha
 
-theorem fst_of_two_params (a b : Prop) (ha : a) (hb : b) : a := by
+theorem fst_of_two_params (a b : Prop) (ha : a) (_ : b) : a := by
   apply ha
 
 theorem prop_comp (a b c : Prop) (hab : a → b) (hbc : b → c) :

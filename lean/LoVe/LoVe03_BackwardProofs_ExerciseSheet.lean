@@ -110,27 +110,43 @@ theorem mul_zero (n : ℕ) :
 #check add_succ
 theorem mul_succ (m n : ℕ) :
     mul (Nat.succ m) n = add (mul m n) n := by
-  sorry
+  induction n with
+  | zero =>
+    simp [mul, add_zero]
+  | succ n ih =>
+    simp [mul, add, add_succ, ih]
+    ac_rfl
+
 
 
 /- 2.2. Prove commutativity and associativity of multiplication using the
 `induction` tactic. Choose the induction variable carefully. -/
 
 theorem mul_comm (m n : ℕ) :
-    mul m n = mul n m :=
-  sorry
+    mul m n = mul n m := by
+  induction m with
+  | zero =>
+    simp [mul, mul_zero]
+  | succ m ih =>
+    simp [mul_succ, mul, ih]
+    ac_rfl
 
 theorem mul_assoc (l m n : ℕ) :
-    mul (mul l m) n = mul l (mul m n) :=
-  sorry
+    mul (mul l m) n = mul l (mul m n) := by
+  induction n with
+  | zero =>
+    simp [mul]
+  | succ n ih =>
+    simp [mul, mul_add, ih]
 
 /- 2.3. Prove the symmetric variant of `mul_add` using `rw`. To apply
 commutativity at a specific position, instantiate the rule by passing some
 arguments (e.g., `mul_comm _ l`). -/
 
 theorem add_mul (l m n : ℕ) :
-    mul (add l m) n = add (mul n l) (mul n m) :=
-  sorry
+    mul (add l m) n = add (mul n l) (mul n m) := by
+  rw [mul_comm, mul_add]
+
 
 
 /- ## Question 3 (**optional**): Intuitionistic Logic
@@ -158,14 +174,29 @@ Hint: You will need `Or.elim` and `False.elim`. You can use
 and similarly for `Peirce`. -/
 
 theorem Peirce_of_EM :
-    ExcludedMiddle → Peirce :=
-  sorry
+    ExcludedMiddle → Peirce := by
+  rw [ExcludedMiddle, Peirce]
+  intro hex
+  intro a b haba
+  apply Or.elim (hex a)
+  . intro ha
+    apply ha
+  . intro hna
+    apply haba
+    intro ha
+    apply False.elim
+    apply hna ha
+
 
 /- 3.2 (**optional**). Prove the following implication using tactics. -/
 
 theorem DN_of_Peirce :
-    Peirce → DoubleNegation :=
+    Peirce → DoubleNegation := by
+  rw [Peirce, DoubleNegation]
+  intro hpe
+  intro a hnna
   sorry
+
 
 /- We leave the remaining implication for the homework: -/
 
