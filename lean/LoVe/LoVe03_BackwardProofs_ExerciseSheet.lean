@@ -195,7 +195,12 @@ theorem DN_of_Peirce :
   rw [Peirce, DoubleNegation]
   intro hpe
   intro a hnna
-  sorry
+  apply hpe _ False
+  intro hna
+  apply False.elim
+  apply hnna
+  apply hna
+
 
 
 /- We leave the remaining implication for the homework: -/
