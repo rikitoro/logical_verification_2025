@@ -26,26 +26,45 @@ Hint: Some strategies for carrying out such proofs are described at the end of
 Section 3.3 in the Hitchhiker's Guide. -/
 
 theorem B (a b c : Prop) :
-    (a → b) → (c → a) → c → b :=
-  sorry
+    (a → b) → (c → a) → c → b := by
+  intro hab hca hc
+  apply hab
+  apply hca hc
 
 theorem S (a b c : Prop) :
-    (a → b → c) → (a → b) → a → c :=
-  sorry
+    (a → b → c) → (a → b) → a → c := by
+  intro habc hab ha
+  apply habc ha
+  apply hab ha
 
 theorem more_nonsense (a b c d : Prop) :
-    ((a → b) → c → d) → c → b → d :=
-  sorry
+    ((a → b) → c → d) → c → b → d := by
+  intro h hc hb
+  apply h
+  intro ha
+  apply hb
+  apply hc
+
 
 theorem even_more_nonsense (a b c : Prop) :
-    (a → b) → (a → c) → a → b → c :=
-  sorry
+    (a → b) → (a → c) → a → b → c := by
+  intro hab hac ha hb
+  apply hac ha
+
 
 /- 1.2 (1 point). Prove the following theorem using basic tactics. -/
 
 theorem weak_peirce (a b : Prop) :
-    ((((a → b) → a) → a) → b) → b :=
-  sorry
+    ((((a → b) → a) → a) → b) → b := by
+  intro h
+  apply h
+  intro h'
+  apply h'
+  intro ha
+  apply h
+  intro h''
+  apply ha
+
 
 
 /- ## Question 2 (5 points): Logical Connectives
@@ -62,8 +81,17 @@ Hints:
   proof. -/
 
 theorem herman (a : Prop) :
-    ¬¬ (¬¬ a → a) :=
-  sorry
+    ¬¬ (¬¬ a → a) := by
+  intro h
+  apply h
+  intro nna
+  apply False.elim
+  apply nna
+  intro ha
+  apply h
+  intro nna
+  apply ha
+
 
 /- 2.2 (2 points). Prove the missing link in our chain of classical axiom
 implications.
@@ -87,8 +115,17 @@ Hints:
 #check ExcludedMiddle
 
 theorem EM_of_DN :
-    DoubleNegation → ExcludedMiddle :=
-  sorry
+    DoubleNegation → ExcludedMiddle := by
+  rw [DoubleNegation, ExcludedMiddle]
+  intro hdn
+  intro a
+  apply hdn
+  intro h
+  apply h
+  apply Or.inr
+  intro ha
+  apply h
+  apply Or.inl ha
 
 /- 2.3 (2 points). We have proved three of the six possible implications
 between `ExcludedMiddle`, `Peirce`, and `DoubleNegation`. State and prove the
@@ -99,6 +136,24 @@ three missing implications, exploiting the three theorems we already have. -/
 #check EM_of_DN
 
 -- enter your solution here
+theorem EM_of_Peirce :
+  Peirce → ExcludedMiddle := by
+  intro h
+  apply EM_of_DN
+  apply DN_of_Peirce h
+
+theorem Peirce_of_DN :
+  DoubleNegation → Peirce := by
+  intro h
+  apply Peirce_of_EM
+  apply EM_of_DN h
+
+theorem DN_of_EM :
+  ExcludedMiddle → DoubleNegation := by
+  intro h
+  apply DN_of_Peirce
+  apply Peirce_of_EM h
+
 
 end BackwardProofs
 
