@@ -113,12 +113,19 @@ Notice that they are registered as simplification rules thanks to the `@[simp]`
 attribute. -/
 
 @[simp] theorem drop_nil {α : Type} :
-    ∀n : ℕ, drop n ([] : List α) = [] :=
-  sorry
+    ∀n : ℕ, drop n ([] : List α) = [] := by
+  intro n
+  cases n with
+  | zero => rfl
+  | succ n =>
+    simp [drop]
 
 @[simp] theorem take_nil {α : Type} :
-    ∀n : ℕ, take n ([] : List α) = [] :=
-  sorry
+    ∀n : ℕ, take n ([] : List α) = [] := by
+  intro n
+  cases n with
+  | zero => rfl
+  | succ n => simp [take]
 
 /- 2.3. Follow the recursion pattern of `drop` and `take` to prove the
 following theorems. In other words, for each theorem, there should be three
@@ -130,6 +137,9 @@ two arguments to `drop`). For the third case, `← add_assoc` might be useful. -
 theorem drop_drop {α : Type} :
     ∀(m n : ℕ) (xs : List α), drop n (drop m xs) = drop (n + m) xs
   | 0,     n, xs      => by rfl
+  | _ + 1, n, []      => by simp [drop]
+  | m + 1, n, x :: xs => by
+    simp [drop]
   -- supply the two missing cases here
 
 theorem take_take {α : Type} :
