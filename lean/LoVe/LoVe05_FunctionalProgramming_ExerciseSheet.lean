@@ -32,22 +32,26 @@ hypothesis is not strong enough. Start by proving the following generalization
 (using the `induction` tactic or pattern matching): -/
 
 theorem reverseAccu_Eq_reverse_append {α : Type} :
-    ∀as xs : List α, reverseAccu as xs = reverse xs ++ as :=
-  sorry
+    ∀as xs : List α, reverseAccu as xs = reverse xs ++ as := by
+  intro as xs
+  induction xs generalizing as with
+  | nil => rfl
+  | cons x xs ih =>
+    simp [reverseAccu, reverse, ih]
 
 /- 1.2. Derive the desired equation. -/
 
 theorem reverseAccu_eq_reverse {α : Type} (xs : List α) :
-    reverseAccu [] xs = reverse xs :=
-  sorry
+    reverseAccu [] xs = reverse xs := by
+  simp [reverseAccu_Eq_reverse_append]
 
 /- 1.3. Prove the following property.
 
 Hint: A one-line inductionless proof is possible. -/
 
 theorem reverseAccu_reverseAccu {α : Type} (xs : List α) :
-    reverseAccu [] (reverseAccu [] xs) = xs :=
-  sorry
+    reverseAccu [] (reverseAccu [] xs) = xs := by
+  simp [reverseAccu_eq_reverse, reverse_reverse]
 
 /- 1.4. Prove the following theorem by structural induction, as a "paper"
 proof. This is a good exercise to develop a deeper understanding of how
@@ -90,8 +94,11 @@ def drop {α : Type} : ℕ → List α → List α
 To avoid unpleasant surprises in the proofs, we recommend that you follow the
 same recursion pattern as for `drop` above. -/
 
-def take {α : Type} : ℕ → List α → List α :=
-  sorry
+def take {α : Type} : ℕ → List α → List α
+  | 0,      _       => []
+  | _ + 1,  []      => []
+  | m + 1,  x :: xs => x :: take m xs
+
 
 #eval take 0 [3, 7, 11]   -- expected: []
 #eval take 1 [3, 7, 11]   -- expected: [3]
