@@ -138,17 +138,24 @@ theorem drop_drop {α : Type} :
     ∀(m n : ℕ) (xs : List α), drop n (drop m xs) = drop (n + m) xs
   | 0,     n, xs      => by rfl
   | _ + 1, n, []      => by simp [drop]
-  | m + 1, n, x :: xs => by
+  | m + 1, n, x :: xs' => by
     simp [drop]
+    simp [drop_drop]
   -- supply the two missing cases here
 
 theorem take_take {α : Type} :
-    ∀(m : ℕ) (xs : List α), take m (take m xs) = take m xs :=
-  sorry
+    ∀(m : ℕ) (xs : List α), take m (take m xs) = take m xs
+  | 0,   _          => by rfl
+  | _ + 1, []       => by simp [take]
+  | m + 1, x :: xs' => by
+    simp [take, take_take]
 
 theorem take_drop {α : Type} :
-    ∀(n : ℕ) (xs : List α), take n xs ++ drop n xs = xs :=
-  sorry
+    ∀(n : ℕ) (xs : List α), take n xs ++ drop n xs = xs
+  | 0, xs           => by rfl
+  | _ + 1, []       => by rfl
+  | m + 1, x :: xs' => by
+    simp [take, drop, take_drop]
 
 
 /- ## Question 3: A Type of Terms
@@ -161,12 +168,20 @@ theorem take_drop {α : Type} :
             |  `app` Term Term     -- application (e.g., `t u`) -/
 
 -- enter your definition here
+inductive Term where
+  | var : String → Term
+  | lam : String → Term → Term
+  | app : Term → Term → Term
 
 /- 3.2 (**optional**). Register a textual representation of the type `Term` as
 an instance of the `Repr` type class. Make sure to supply enough parentheses to
 guarantee that the output is unambiguous. -/
 
 def Term.repr : Term → String
+  | var x => x
+  | lam x t => "(λ"++ x ++ ". " ++ repr t ++ ")"
+  | app t u => "(" ++ repr t ++ " " ++ repr u ++ ")"
+
 -- enter your answer here
 
 instance Term.Repr : Repr Term :=
@@ -175,7 +190,7 @@ instance Term.Repr : Repr Term :=
 /- 3.3 (**optional**). Test your textual representation. The following command
 should print something like `(λx. ((y x) x))`. -/
 
-#eval (Term.lam "x" (Term.app (Term.app (Term.var "y") (Term.var "x"))
-    (Term.var "x")))
+#eval (Term.lam "x"
+(Term.app (Term.app (Term.var "y") (Term.var "x")) (Term.var "x")))
 
 end LoVe

@@ -151,4 +151,201 @@ def head {α : Type} [Inhabited α] : List α → α
 theorem head_head {α : Type} [Inhabited α] (xs : List α) :
   head [head xs] = head xs := rfl
 
+
+class Zero (α : Type) where
+  zero : α
+
+class One (α : Type) where
+  one : α
+
+class Neg (α : Type) where
+  neg : α → α
+
+class Inv (α : Type) where
+  inv : α → α
+
+class Acc (α : Type) where
+  add : α → α → α
+
+class Mul (α : Type) where
+  mul : α → α → α
+
+class IsComutative (α : Type) (f : α → α → α) where
+  comm : ∀ a b, f a b = f b a
+
+class IsAssociative (α : Type) (f : α → α → α) where
+  assoc := ∀ a b c, f (f a b) c = f a (f b c)
+
+-- ## Lists
+
+theorem head_head_cases {α : Type} [Inhabited α] (xs : List α) :
+  head [head xs] = head xs := by
+  cases xs with
+  | nil => rfl
+  | cons x xs => rfl
+
+theorem head_head_match {α : Type} [Inhabited α] (xs : List α) :
+  head [head xs] = head xs :=
+  match xs with
+  | .nil => by rfl
+  | .cons x xs => by rfl
+
+theorem injection_example {α : Type} (x y : α) (xs ys : List α) (h : x :: xs = y :: ys) :
+  x = y ∧ xs = ys := by
+  cases h
+  simp
+
+theorem distincness_example {α : Type} (y : α) (ys : List α) (h : [] = y :: ys) :
+  False := by
+  cases h
+
+def map {α β : Type} (f :α → β) : List α → List β
+  | []        => []
+  | x :: xs   => f x :: map f xs
+
+def mapArgs {α β : Type} : (α → β) → List α → List β
+  | _, []       => []
+  | f, x :: xs  => f x :: mapArgs f xs
+
+theorem map_ident {α : Type} (xs : List α) :
+  map (fun x ↦ x) xs = xs := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih =>
+    simp [map, ih]
+
+theorem map_comp {α β γ : Type} (f : α → β) (g : β → γ) (xs : List α) :
+  map g (map f xs) = map (fun x ↦ g (f x)) xs := by
+  induction xs with
+  | nil =>
+    rfl
+  | cons x xs ih =>
+    simp [map, ih]
+
+def tail {α : Type} : List α → List α
+  | []      => []
+  | _ :: xs => xs
+
+def headOpt {α : Type} : List α → Option α
+  | []        => .none
+  | x :: _    => .some x
+
+def headPre {α : Type} : (xs : List α) → xs ≠ [] → α
+  | [],     hxs => by simp at *
+  | x :: _, hxs => x
+
+#eval headPre [3, 1, 4] (by simp)
+
+def zip {α β : Type} : List α → List β → List (α × β)
+  | x :: xs, y :: ys => (x, y) :: zip xs ys
+  | [],      _       => []
+  | _ :: _,  []      => []
+
+
+def length {α : Type} : List α → ℕ
+  | []      => 0
+  | _ :: xs => length xs + 1
+
+theorem min_add_add (l m n : ℕ) :
+  min (m + l) (n + l) = min m n + l := by
+  cases Classical.em (m ≤ n) with
+  | inl h => simp [min, h]
+  | inr h => simp [min, h]
+
+theorem min_add_add_match (l m n : ℕ) :
+  min (m + l) (n + l) = min m n + l :=
+  match Classical.em (m ≤ n) with
+  | .inl h => by simp [min, h]
+  | .inr h => by simp [min, h]
+
+theorem min_add_add_if (l m n : ℕ) :
+  min (m + l) (n + l) = min m n + l :=
+  if h : m ≤ n then
+    by simp [min, h]
+  else
+    by simp [min, h]
+
+theorem length_zip {α β : Type} (xs : List α) (ys : List β) :
+  length (zip xs ys) = min (length xs) (length ys) := by
+  induction xs generalizing ys with
+  | nil =>
+    simp [length, min]
+  | cons x xs ih =>
+    cases ys with
+    | nil => rfl
+    | cons y ys =>
+      simp [zip, length, ih ys, min_add_add]
+
+theorem map_zip {α α' β  β' : Type} (f : α → α') (g : β → β') :
+  ∀ xs ys,
+    map (fun ab : α × β ↦ (f $ Prod.fst ab, g $ Prod.snd ab))
+      (zip xs ys) =
+    zip (map f xs) (map g ys)
+  | x :: xs, y :: ys => by simp [zip, map, map_zip]
+  | [],      _       => by rfl
+  | _ :: _,  []      => by rfl
+
+
+-- ## Binary Trees
+
+inductive Tree (α : Type) : Type
+  | nil : Tree α
+  | node : α → Tree α → Tree α → Tree α
+
+def mirror {α : Type} : Tree α → Tree α
+  | .nil        => .nil
+  | .node a l r => .node a (mirror r) (mirror l)
+
+theorem mirror_mirror {α : Type} (t : Tree α) :
+  mirror (mirror t) = t := by
+  induction t with
+  | nil => rfl
+  | node a l r ihl ihr =>
+    simp [mirror, ihl, ihr]
+
+theorem mirror_mirror_calc {α : Type} :
+  ∀ t : Tree α, mirror (mirror t) = t
+  | .nil => by rfl
+  | .node a l r => calc
+    mirror (mirror (.node a l r))
+    = mirror (.node a (mirror r) (mirror l)) := by
+      rfl
+    _ = .node a (mirror (mirror l)) (mirror (mirror r)) := by
+      rfl
+    _ = .node a l r := by
+      simp [mirror_mirror_calc]
+
+theorem mirror_Eq_nil_Iff {α : Type} :
+  ∀ t : Tree α, mirror t = .nil ↔ t = .nil
+  | .nil          => by simp [mirror]
+  | .node _ _ _   => by simp [mirror]
+
+-- ## Dependent Inductive Types
+
+inductive Vec (α : Type) : ℕ → Type where
+  | nil : Vec α 0
+  | cons (a : α) {n : ℕ} (v : Vec α n) : Vec α (n + 1)
+
+#check Vec.nil
+#check Vec.cons
+#check Vec ℕ 2
+#check  Vec.cons 3 (.cons 2 (.cons 1 .nil))
+
+def listOfVec {α : Type} : ∀ {n : ℕ}, Vec α n → List α
+  | _, .nil       => []
+  | _, .cons a v  => a :: listOfVec v
+
+def vecOfList {α : Type} :
+  ∀ xs : List α, Vec α (length xs)
+  | []        => .nil
+  | x :: xs   => .cons x (vecOfList xs)
+
+theorem length_listOfVec {α : Type} :
+  ∀ (n : ℕ) (v : Vec α n), List.length (listOfVec v) = n
+  | _, .nil      => by rfl
+  | _, .cons a v => by
+    simp [listOfVec, length_listOfVec]
+
+
+
 end LoVe
