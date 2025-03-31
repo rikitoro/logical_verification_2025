@@ -63,6 +63,7 @@ inductive Star {α : Type} (R : α → α → Prop) : α → α → Prop where
 --   | intro : ¬ Illegal → Illegal
 
 -- ## Logical Symbols
+namespace TempLogicalSymbols
 
 inductive And (a b : Prop) : Prop where
   | intro : a → b → And a b
@@ -84,5 +85,102 @@ inductive False : Prop where
 
 inductive Eq {α : Type} : α → α → Prop where
   | refl : ∀ a : α, Eq a a
+
+end TempLogicalSymbols
+
+-- ## Rule Induction
+
+theorem mod_two_Eq_zero_of_Even (n : ℕ) (h : Even n) :
+  n % 2 = 0 := by
+  induction h with
+  | zero => rfl
+  | add_two k hk ih => simp [ih]
+
+
+theorem Star_Star_Iff_Star {α : Type} (R : α → α → Prop) (a b : α) :
+  Star (Star R) a b ↔ Star R a b := by
+  apply Iff.intro
+  . intro h
+    induction h with
+    | base a' b' hab =>
+      exact hab
+    | refl a' =>
+      apply Star.refl
+    | trans a b c hab hbc ihab ihbc =>
+      apply Star.trans a b
+      . exact ihab
+      . exact ihbc
+  . intro h
+    apply Star.base
+    exact h
+
+@[simp]
+theorem Star_Star_Eq_Star {α : Type} (R : α → α → Prop) :
+  Star (Star R) = Star R := by
+  apply funext
+  intro a
+  apply funext
+  intro b
+  apply propext
+  apply Star_Star_Iff_Star
+
+
+-- ## Elimination
+
+theorem Even_Iff (n : ℕ) :
+  Even n ↔ n = 0 ∨ (∃ m : ℕ, n = m + 2 ∧ Even m) := by
+  apply Iff.intro
+  . intro hn
+    cases hn with
+    | zero => simp
+    | add_two k hk =>
+      apply Or.inr
+      apply Exists.intro k
+      simp [hk]
+  . intro hor
+    cases hor with
+    | inl heq => simp [heq, Even.zero]
+    | inr hex =>
+      cases hex with
+      | intro k hand =>
+        cases hand with
+        | intro heq hk =>
+          simp [heq, Even.add_two, hk]
+
+theorem Even_Iff_struct (n : ℕ) :
+  Even n ↔ n = 0 ∨ (∃ m : ℕ, n = m + 2 ∧ Even m) :=
+  Iff.intro
+  (
+    assume hn : Even n
+    match n, hn with
+    | _, .zero =>
+      show 0 = 0 ∨ _ from by
+        simp
+    | _, .add_two k hk =>
+      show _ ∨ (∃ m, k + 2 = m + 2 ∧ Even m) from
+        Or.inr (Exists.intro k (by simp [hk]))
+  )
+  (
+    assume hor : n = 0 ∨ (∃ m, n = m + 2 ∧ Even m)
+    match hor with
+    | .inl heq =>
+      show Even n from
+        by simp [heq, Even.zero]
+    | .inr hex =>
+      match hex with
+      | Exists.intro m hand =>
+        match hand with
+        | And.intro heq hm =>
+          show Even n from by
+            simp [heq, hm, Even.add_two]
+  )
+
+-- ## Further Examples
+
+inductive Sorted : List ℕ → Prop where
+  | nil : Sorted []
+  | single (x : ℕ) : Sorted [x]
+  | two_or_more (x y : ℕ) {zs : List ℕ} (hle : x ≤ y) (hsorted : Sorted (y :: zs)) :
+    Sorted (x :: y :: zs)
 
 end LoVe
