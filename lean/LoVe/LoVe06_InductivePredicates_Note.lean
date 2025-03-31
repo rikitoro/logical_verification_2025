@@ -183,4 +183,40 @@ inductive Sorted : List ℕ → Prop where
   | two_or_more (x y : ℕ) {zs : List ℕ} (hle : x ≤ y) (hsorted : Sorted (y :: zs)) :
     Sorted (x :: y :: zs)
 
+theorem Sorted_3_5 : Sorted [3, 5] := by
+  apply Sorted.two_or_more
+  . simp
+  . exact .single _
+
+theorem Sorted_3_5_raw : Sorted [3, 5] :=
+  Sorted.two_or_more _ _ (by simp) (.single _)
+
+theorem Sorted_7_9_9_11 : Sorted [7, 9, 9, 11] :=
+  Sorted.two_or_more _ _ (by simp) (
+    .two_or_more _ _ (by simp) (
+      .two_or_more _ _ (by simp) (
+        .single _)))
+
+theorem Not_Sorted_17_13 : ¬ Sorted [17, 13] := by
+  intro h
+  cases h with
+  | two_or_more _ _ hlt hsorted => simp at hlt
+
+
+inductive Palindrome {α : Type} : List α → Prop where
+  | nil : Palindrome []
+  | single (x : α) : Palindrome [x]
+  | sandwich (x : α) (xs : List α) (hxs : Palindrome xs) :
+    Palindrome ([x] ++ xs ++ [x])
+
+theorem Palindrome_reverse {α : Type} (xs : List α) (hxs : Palindrome xs) :
+  Palindrome (reverse xs) := by
+  induction hxs with
+  | nil => exact .nil
+  | single x => exact .single x
+  | sandwich x xs hxs ih =>
+    simp [reverse, reverse_append]
+    exact .sandwich _ _ ih
+
+
 end LoVe
