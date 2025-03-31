@@ -61,9 +61,11 @@ theorem insort_Neq_nil {α : Type} (t : HTree α) :
   | nil =>
     simp [insort]
   | cons u us =>
-    cases Classical.em (weight u ≤ weight t) with
-    | inl h => sorry
-    | inr h => sorry
+    cases Classical.em (weight t ≤ weight u) with
+    | inl h =>
+      simp [insort, h]
+    | inr h =>
+      simp [insort, h]
 
 /- 1.4 (2 points). Prove the same property as above again, this time as a
 "paper" proof. Follow the guidelines given in question 1.4 of the exercise. -/
@@ -99,19 +101,37 @@ Hints:
 #check add_mul
 
 theorem sumUpToOfFun_eq :
-    ∀m : ℕ, 2 * sumUpToOfFun (fun i ↦ i) m = m * (m + 1) :=
-  sorry
+    ∀m : ℕ, 2 * sumUpToOfFun (fun i ↦ i) m = m * (m + 1) := by
+  intro m
+  induction m with
+  | zero => rfl
+  | succ m ih =>
+    simp [sumUpToOfFun, ih]
+    linarith
 
 /- 2.2 (2 points). Prove the following property of `sumUpToOfFun`. -/
 
 theorem sumUpToOfFun_mul (f g : ℕ → ℕ) :
     ∀n : ℕ, sumUpToOfFun (fun i ↦ f i + g i) n =
-      sumUpToOfFun f n + sumUpToOfFun g n :=
-  sorry
+      sumUpToOfFun f n + sumUpToOfFun g n := by
+  intro n
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp [sumUpToOfFun, ih]
+    repeat rw [add_assoc]
+    linarith
+    -- rw [add_comm (f _) (_  + g _)]
+    -- rw [add_assoc ]
+    -- rw [add_comm (f _)]
+
+
 
 /- 2.3 (2 bonus points). Prove `sumUpToOfFun_mul` again as a "paper" proof.
 Follow the guidelines given in question 1.4 of the exercise. -/
 
 -- enter your paper proof here
+
+-- `ToDo`
 
 end LoVe
