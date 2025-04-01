@@ -219,4 +219,80 @@ theorem Palindrome_reverse {α : Type} (xs : List α) (hxs : Palindrome xs) :
     exact .sandwich _ _ ih
 
 
+inductive IsFull {α : Type} : Tree α → Prop where
+  | nil : IsFull Tree.nil
+  | node (a : α) (l r : Tree α) (hl : IsFull l) (hr : IsFull r)
+      (hiff : l = .nil ↔ r = .nil) :
+    IsFull (.node a l r)
+
+
+theorem IsFull_singleton {α : Type} (a : α) :
+  IsFull (.node a .nil .nil) := by
+  apply IsFull.node
+  . apply IsFull.nil
+  . apply IsFull.nil
+  . rfl
+
+theorem IsFull_mirror {α : Type} (t : Tree α) (ht : IsFull t) :
+  IsFull (mirror t) := by
+  induction ht with
+  | nil =>
+    simp [mirror, IsFull.nil]
+  | node a l r hl hr hiff ih_l ih_r =>
+    simp [mirror]
+    apply IsFull.node
+    . exact ih_r
+    . exact ih_l
+    . simp [mirror_Eq_nil_Iff, *]
+
+theorem IsFull_mirror_strict_induct {α : Type} (t : Tree α) :
+  IsFull t → IsFull (mirror t) := by
+  induction t with
+  | nil =>
+    intro ht
+    simp [mirror, ht]
+  | node a l r ih_l ih_r =>
+    intro ht
+    cases ht with
+    | node _ _ _ hl hr hiff =>
+      simp [mirror]
+      apply IsFull.node
+      . apply ih_r hr
+      . apply ih_l hl
+      . simp [mirror_Eq_nil_Iff, hiff]
+
+
+inductive Term (α β : Type) : Type where
+  | var : β → Term α β
+  | fn  : α → List (Term α β) → Term α β
+
+inductive WellFormed {α β : Type} (arity : α → ℕ) :
+  Term α β → Prop where
+  | var (x : β) : WellFormed arity (.var x)
+  | fn (f : α) (ts : List (Term α β))
+      (hargs : ∀ t ∈ ts, WellFormed arity t)
+      (hlen : length ts = arity f) :
+    WellFormed arity (.fn f ts)
+
+inductive VariableFree {α β : Type} : Term α β → Prop where
+  | fn (f : α) (ts : List (Term α β))
+      (hargs : ∀ t ∈ ts, VariableFree t) :
+    VariableFree (Term.fn f ts)
+
+-- ## Induction Pitfalls
+
+theorem Not_Even_two_mul_add_one (m n : ℕ) (hm : m = 2 * n + 1) : ¬ Even m := by
+  intro h
+  induction h generalizing n with
+  | zero => linarith
+  | add_two k hk ih =>
+    apply ih (n - 1)
+    cases n with
+    | zero => linarith
+    | succ n =>
+      simp [Nat.succ_eq_add_one] at *
+      linarith
+
+
+
 end LoVe
