@@ -28,22 +28,25 @@ inductive Term : Type
 its argument is of the form `Term.lam …` and that returns `False` otherwise. -/
 
 -- enter your definition here
+inductive IsLam : Term → Prop
+  | lam (s : String) (t : Term) : IsLam (.lam s t)
 
 /- 1.2 (2 points). Validate your answer to question 1.1 by proving the following
 theorems: -/
 
 theorem IsLam_lam (s : String) (t : Term) :
-    IsLam (Term.lam s t) :=
-  sorry
+    IsLam (Term.lam s t) := by
+  apply IsLam.lam
 
 theorem not_IsLamVar (s : String) :
-    ¬ IsLam (Term.var s) :=
-  sorry
+    ¬ IsLam (Term.var s) := by
+  intro h
+  cases h
 
 theorem not_IsLam_app (t u : Term) :
-    ¬ IsLam (Term.app t u) :=
-  sorry
-
+    ¬ IsLam (Term.app t u) := by
+  intro h
+  cases h
 
 /- ## Question 2 (6 points): Transitive Closure
 
