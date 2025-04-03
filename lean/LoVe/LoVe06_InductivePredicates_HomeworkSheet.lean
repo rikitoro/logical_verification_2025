@@ -72,6 +72,9 @@ would use replace `(step)` with the following right-leaning rule:
 Define a predicate `TCV2` that embodies this alternative definition. -/
 
 -- enter your definition here
+inductive TCV2 {α : Type} (R : α → α → Prop) : α → α → Prop
+  | base (a b : α)  : R a b → TCV2 R a b
+  | pets (a b c :α) : TCV2 R a b → R b c → TCV2 R a c
 
 /- 2.2 (2 points). Yet another definition of the transitive closure `R⁺` would
 use the following symmetric rule instead of `(step)` or `(pets)`:
@@ -81,18 +84,36 @@ use the following symmetric rule instead of `(step)` or `(pets)`:
 Define a predicate `TCV3` that embodies this alternative definition. -/
 
 -- enter your definition here
-
+inductive TCV3 {α : Type} (R : α → α → Prop) : α → α → Prop
+  | base (a b : α)    : R a b → TCV3 R a b
+  | trans (a b c : α) : TCV3 R a b → TCV3 R b c → TCV3 R a c
 /- 2.3 (1 point). Prove that `(step)` also holds as a theorem about `TCV3`. -/
 
 theorem TCV3_step {α : Type} (R : α → α → Prop) (a b c : α) (rab : R a b)
       (tbc : TCV3 R b c) :
-    TCV3 R a c :=
-  sorry
+    TCV3 R a c := by
+  apply TCV3.trans
+  apply TCV3.base
+  apply rab
+  apply tbc
+
 
 /- 2.4 (1 point). Prove the following theorem by rule induction: -/
 
 theorem TCV1_pets {α : Type} (R : α → α → Prop) (c : α) :
-    ∀a b, TCV1 R a b → R b c → TCV1 R a c :=
-  sorry
+    ∀a b, TCV1 R a b → R b c → TCV1 R a c := by
+  intro a b
+  intro rtab rbc
+  induction rtab with
+  | base a b rab =>
+    apply TCV1.step a b c
+    . apply rab
+    . apply TCV1.base
+      . apply rbc
+  | step a d b rad rtdb ih =>
+    apply TCV1.step a d
+    . exact rad
+    . apply ih rbc
+
 
 end LoVe
