@@ -162,7 +162,14 @@ theorem map_mirror {α β : Type} (f : α → β) :
     apply IsFull.node
     . apply ihl
     . apply ihr
-    . sorry
+    . apply Iff.intro
+      . intro h
+        simp [Tree.map_eq_empty_iff, hiff] at *
+        exact h
+      . intro h
+        simp [Tree.map_eq_empty_iff, hiff] at *
+        exact h
+
 
 
 
