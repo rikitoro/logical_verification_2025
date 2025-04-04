@@ -34,13 +34,24 @@ You will proceed in three steps.
 introduction rules for `True`, `∧`, and `↔` and that invokes `intro _` for
 `→`/`∀`. The tactic generalizes `intro_and` from the exercise. -/
 
-macro "safe_intros" : tactic =>
-  sorry
+macro "safe_intros" : tactic => `(
+  tactic | (
+    repeat'
+      first
+      | apply True.intro
+      | apply And.intro
+      | apply Iff.intro
+      | done
+    repeat' intro
+  )
+)
 
 theorem abcd (a b c d : Prop) :
     a → ¬ b ∧ (c ↔ d) :=
   by
     safe_intros
+
+
     /- The proof state should be roughly as follows:
 
         case left
