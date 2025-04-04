@@ -247,7 +247,7 @@ def constInExpr (name : Name) (e : Expr) : Bool :=
   | .app t u              => constInExpr name t || constInExpr name u
   | .lam name' σ b _      => not (name' == name) && (constInExpr name σ || constInExpr name b)
   | .forallE name' σ b _  => not (name' == name) && (constInExpr name σ || constInExpr name b)
-  | .letE name' σ v b _   => not (name' == name) && (constInExpr name σ || constInExpr name b || constInExpr name b)
+  | .letE name' σ v b _   => not (name' == name) && (constInExpr name σ || constInExpr name v || constInExpr name b)
   | .mdata _ e            => constInExpr name e
   | .proj _ _ e           => constInExpr name e
   | _ => false
@@ -269,7 +269,13 @@ This code should be similar to that of `proveDirect` in the demo file. With
 `ConstantInfo.type`, you can extract the proposition associated with a theorem. -/
 
 def findConsts (names : List Name) : TacticM Unit :=
-  sorry
+  do
+    let env ← getEnv
+    for (name, info) in SMap.toList (Environment.constants env) do
+      if isTheorem info && ! ConstantInfo.isUnsafe info then
+        if constsInExpr names (ConstantInfo.type info) then
+          logInfo m!"{name}"
+
 
 elab "find_consts" "(" names:ident+ ")" : tactic =>
   findConsts (Array.toList (Array.map getId names))
@@ -281,6 +287,7 @@ theorem List.a_property_of_reverse {α : Type} (xs : List α) (a : α) :
   by
     find_consts (List.reverse)
     find_consts (List.reverse List.concat)
-    sorry
+    apply List.concat_eq_reverse_cons
+
 
 end LoVe
