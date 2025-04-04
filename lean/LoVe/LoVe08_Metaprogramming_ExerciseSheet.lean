@@ -129,7 +129,7 @@ partial def casesAnd : TacticM Unit :=
         if ldecl.type.isAppOfArity ``And 2 then
           cases ldecl.fvarId
           casesAnd
-    return
+          return
 
 #check LocalContext
 
@@ -213,9 +213,17 @@ theorem aa_aa_example (a : Prop) (h : a ∧ a) : a ∧ a := by
 theorem ab_ba_example (a b : Prop) (h : a ∧ b) : b ∧ a := by
   destro_and
 
-theorem ab_bc_ac_example (a b c d : Prop) (h₁ : a ∧ b) (h₂ : c ∧ d): b ∧ a := by
-  cases_and
-  -- FixMe ふたつめの仮定での cases でどうもエラーになるらしい
+theorem ab_bc_ac_example (a b c : Prop) (h₁ : a ∧ b) (h₂ : b ∧ c) : a ∧ c := by
+  destro_and
+
+theorem ab_cd_bd_example (a b c d : Prop) (h₁ : a ∧ b) (h₂ : c ∧ d) : b ∧ d := by
+  destro_and
+
+theorem complex_example (a b c d: Prop) (h₁ : a ∧ (b ∧ c) ∧ a) (h₂ : d ∧ c): a ∧ b ∧ d := by
+  destro_and
+
+
+
 
 /- ## Question 2: A Theorem Finder
 
