@@ -125,7 +125,7 @@ partial def casesAnd : TacticM Unit :=
   withMainContext <| do
     let lctx ← getLCtx
     for ldecl in lctx do
-      if ! ldecl.isImplementationDetail then
+      -- if ! ldecl.isImplementationDetail then
         if ldecl.type.isAppOfArity ``And 2 then
           cases ldecl.fvarId
           casesAnd
@@ -155,7 +155,7 @@ theorem abcd_bd_again (a b c d : Prop) :
         ⊢ b ∧ d -/
     sorry
 
-theorem abcd_bacb_again' (a b c d : Prop) (h : a ∧ (b ∧ c) ∧ d) :
+theorem abcd_bacb_again' (a b c d : Prop) (h : a ∧ (b ∧ c) ∧ d ∧ d) :
     b ∧ (a ∧ (c ∧ b)) :=
   by
     cases_and
@@ -201,7 +201,7 @@ theorem abd_bacb_again (a b c d : Prop) (h : a ∧ b ∧ d) :
 it works as expected also on more complicated examples. -/
 
 -- enter your examples here
-theorem aa_a_example (a b: Prop) (h : a ∧ a) : b := by
+theorem aa_a_example (a b: Prop) (h : a ∧ a) : a := by
   destro_and
   -- cases_and
   -- intro_and
@@ -242,15 +242,25 @@ Hints:
   `||`, the "and" connective is called `&&`, and equality is called `==`. -/
 
 def constInExpr (name : Name) (e : Expr) : Bool :=
-  sorry
+  match e with
+  | .const name' _        => name' == name
+  | .app t u              => constInExpr name t || constInExpr name u
+  | .lam name' σ b _      => not (name' == name) && (constInExpr name σ || constInExpr name b)
+  | .forallE name' σ b _  => not (name' == name) && (constInExpr name σ || constInExpr name b)
+  | .letE name' σ v b _   => not (name' == name) && (constInExpr name σ || constInExpr name b || constInExpr name b)
+  | .mdata _ e            => constInExpr name e
+  | .proj _ _ e           => constInExpr name e
+  | _ => false
 
+
+#print Expr
 /- 2.2. Write a function that checks whether an expression contains **all**
 constants in a list.
 
 Hint: You can either proceed recursively or use `List.and` and `List.map`. -/
 
 def constsInExpr (names : List Name) (e : Expr) : Bool :=
-  sorry
+  names.map (fun n ↦ constInExpr n e) |>.and
 
 /- 2.3. Develop a tactic that uses `constsInExpr` to print the name of all
 theorems that contain all constants `names` in their statement.
