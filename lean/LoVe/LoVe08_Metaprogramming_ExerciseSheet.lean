@@ -41,7 +41,11 @@ conjunctions are gone. Define your tactic as a macro. -/
 #check repeat'
 
 -- enter your definition here
-
+macro "intro_and" : tactic => `(
+  tactic | (
+    repeat' apply And.intro
+  )
+)
 theorem abcd_bd (a b c d : Prop) (h : a ∧ (b ∧ c) ∧ d) :
     b ∧ d :=
   by
@@ -115,9 +119,19 @@ Here is some pseudocode that you can follow:
 
 Hint: When iterating over the declarations in the local context, make sure to
 skip any declaration that is an implementation detail. -/
+#print cases
 
 partial def casesAnd : TacticM Unit :=
-  sorry
+  withMainContext <| do
+    let lctx ← getLCtx
+    for ldecl in lctx do
+      if ! ldecl.isImplementationDetail then
+        if ldecl.type.isAppOfArity ``And 2 then
+          cases ldecl.fvarId
+          casesAnd
+    return
+
+#check LocalContext
 
 elab "cases_and" : tactic =>
   casesAnd
@@ -127,6 +141,9 @@ theorem abcd_bd_again (a b c d : Prop) :
   by
     intro h
     cases_and
+
+
+
     /- The proof state should be as follows:
 
         case intro.intro.intro
@@ -138,12 +155,25 @@ theorem abcd_bd_again (a b c d : Prop) :
         ⊢ b ∧ d -/
     sorry
 
+theorem abcd_bacb_again' (a b c d : Prop) (h : a ∧ (b ∧ c) ∧ d) :
+    b ∧ (a ∧ (c ∧ b)) :=
+  by
+    cases_and
+    sorry
+
+
 /- 1.3. Implement a `destro_and` tactic that first invokes `cases_and`, then
 `intro_and`, before it tries to prove all the subgoals that can be discharged
 directly by `assumption`. -/
 
-macro "destro_and" : tactic =>
-  sorry
+macro "destro_and" : tactic => `(
+  tactic | (
+    cases_and
+    intro_and <;>
+    try assumption
+  )
+)
+
 
 theorem abcd_bd_over_again (a b c d : Prop) (h : a ∧ (b ∧ c) ∧ d) :
     b ∧ d :=
@@ -171,7 +201,21 @@ theorem abd_bacb_again (a b c d : Prop) (h : a ∧ b ∧ d) :
 it works as expected also on more complicated examples. -/
 
 -- enter your examples here
+theorem aa_a_example (a b: Prop) (h : a ∧ a) : b := by
+  destro_and
+  -- cases_and
+  -- intro_and
+  -- assumption
 
+theorem aa_aa_example (a : Prop) (h : a ∧ a) : a ∧ a := by
+  destro_and
+
+theorem ab_ba_example (a b : Prop) (h : a ∧ b) : b ∧ a := by
+  destro_and
+
+theorem ab_bc_ac_example (a b c d : Prop) (h₁ : a ∧ b) (h₂ : c ∧ d): b ∧ a := by
+  cases_and
+  -- FixMe ふたつめの仮定での cases でどうもエラーになるらしい
 
 /- ## Question 2: A Theorem Finder
 

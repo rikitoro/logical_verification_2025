@@ -115,18 +115,17 @@ theorem Even_18_and_Even_20 (α : Type) (a : Type) :
 -- ## An Assumption Tactic
 
 def hypothesis : TacticM Unit :=
-  withMainContext (
-    do
-      let target ← getMainTarget
-      let lctx ← getLCtx
-      for ldecl in lctx do
-        if ! LocalDecl.isImplementationDetail ldecl then
-          let eq ← isDefEq (LocalDecl.type ldecl) target
-          if eq then
-            let goal ← getMainGoal
-            MVarId.assign goal (LocalDecl.toExpr ldecl)
-            return
-      failure)
+  withMainContext do
+    let target ← getMainTarget
+    let lctx ← getLCtx
+    for ldecl in lctx do
+      if ! LocalDecl.isImplementationDetail ldecl then
+        let eq ← isDefEq ldecl.type target
+        if eq then
+          let goal ← getMainGoal
+          MVarId.assign goal ldecl.toExpr
+          return
+    failure
 
 elab "hypothesis" : tactic =>
   hypothesis
