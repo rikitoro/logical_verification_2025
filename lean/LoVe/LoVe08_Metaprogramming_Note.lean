@@ -131,22 +131,142 @@ def hypothesis : TacticM Unit :=
 elab "hypothesis" : tactic =>
   hypothesis
 
-theorem hypothesis_example {α : Type} {p : α → Prop} {a : α}
-  (hpa : p a) : p a := by
+theorem hypothesis_example {α : Type} {p : α → Prop} {a b: α}
+  (h : p b → p a) (hpa : p a): p a := by
   hypothesis
 
+-- ## Expressions
+
+#check Expr
+#print Expr
 
 
+-- ## A conjuction-Destructing Tactic
+
+theorem abc_a (a b c : Prop) (h : a ∧ b ∧ c) : a :=
+  And.left h
+
+theorem abc_b (a b c : Prop) (h : a ∧ b ∧ c) : b :=
+  And.left (And.right h)
+
+theorem abc_bc (a b c : Prop) (h : a ∧ b ∧ c) : b ∧ c :=
+  And.right h
+
+theorem abc_c (a b c : Prop) (h : a ∧ b ∧ c) : c :=
+  And.right <| And.right h
+
+partial def destructAndExpr (hP : Expr) : TacticM Bool :=
+  withMainContext (
+    do
+      let target ← getMainTarget
+      let P ← inferType hP
+      let eq ← isDefEq P target
+      if eq then
+        let goal ← getMainGoal
+        MVarId.assign goal hP
+        return true
+      else
+        match Expr.and? P with
+        | .none         => return false
+        | .some (Q, R)  =>
+          let hQ ← mkAppM ``And.left #[hP]
+          let success ← destructAndExpr hQ
+          if success then
+            return true
+          else
+            let hR ← mkAppM ``And.right #[hP]
+            destructAndExpr hR
+  )
+
+def destructAnd (name : Name) : TacticM Unit :=
+  withMainContext (
+    do
+      let h ← getFVarFromUserName name
+      let success ← destructAndExpr h
+      if ! success then
+        failure
+  )
+
+elab "destruct_and" h:ident : tactic =>
+  destructAnd (getId h)
+
+theorem abc_a_again (a b c : Prop) (h : a ∧ b ∧ c) : a := by
+  destruct_and h
+
+theorem abc_b_again (a b c : Prop) (h : a ∧ b ∧ c) : b := by
+  destruct_and h
+
+theorem abc_bc_again (a b c : Prop) (h : a ∧ b ∧ c) : b ∧ c := by
+  destruct_and h
+
+theorem abc_c_again (a b c : Prop) (h : a ∧ b ∧ c) : c := by
+  destruct_and h
+
+theorem abc_ab_again (a b c : Prop) (h : a ∧ b ∧ c) : a ∧ b := by
+  -- destruct_and h --failed
+  sorry
+
+-- ## Direct Proof Finder
+
+def isTheorem : ConstantInfo → Bool
+  | .axiomInfo _  => true
+  | .thmInfo _    => true
+  | _             => false
+
+def applyConstant (name : Name) : TacticM Unit :=
+  do
+    let cst ← mkConstWithFreshMVarLevels name
+    liftMetaTactic (fun goal ↦ MVarId.apply goal cst)
+
+def andThenOnSubgoals (tac₁ tac₂ : TacticM Unit) : TacticM Unit :=
+  do
+    let origGoals ← getGoals
+    let mainGoal ← getMainGoal
+    setGoals [mainGoal]
+    tac₁
+    let subgoals₁ ← getUnsolvedGoals
+    let mut newGoals := []
+    for subgoal in subgoals₁ do
+      let assigned ← MVarId.isAssigned subgoal
+      if ! assigned then
+        setGoals [subgoal]
+        tac₂
+        let subgoals₂ ← getUnsolvedGoals
+        newGoals := newGoals ++ subgoals₂
+    setGoals (newGoals ++ List.tail origGoals)
+
+def proveUsingTheorem (name : Name) : TacticM Unit :=
+  andThenOnSubgoals (applyConstant name) hypothesis
+
+def proveDirect : TacticM Unit :=
+  do
+    let origGoals ← getUnsolvedGoals
+    let goal ← getMainGoal
+    setGoals [goal]
+    let env ← getEnv
+    for (name, info) in SMap.toList (Environment.constants env) do
+      if isTheorem info && ! ConstantInfo.isUnsafe info then
+        try
+          proveUsingTheorem name
+          logInfo m!"Proved directly by {name}"
+          setGoals (.tail origGoals)
+          return
+        catch _ =>
+          continue
+    failure
+
+elab "prove_direct" : tactic =>
+  proveDirect
 
 
+theorem Nat.symm (x y : ℕ) (h : x = y) :
+  y = x := by
+  prove_direct
 
-
-
-
-
-
-
-
+theorem Nat.symm_manual (x y : ℕ) (h : x = y) :
+  y = x := by
+  apply symm
+  hypothesis
 
 
 
