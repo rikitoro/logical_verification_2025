@@ -227,4 +227,68 @@ theorem Int.add_zero (i : Int) :
     | mk p n => simp [Int.zero, Int.add]
 
 
+-- ###  Unordered Pairs
+
+instance UPair.Setoid (α : Type) : Setoid (α × α) where
+  r :=
+    fun ab₁ ab₂ : α × α ↦
+      ({ab₁.fst, ab₁.snd} : Set α) = ({ab₂.fst, ab₂.snd} : Set α)
+  iseqv.refl := by
+    simp
+  iseqv.symm := by
+    aesop
+  iseqv.trans := by
+    aesop
+
+theorem UPair.Setoid_Iff {α : Type} (ab₁ ab₂ : α × α) :
+  ab₁ ≈ ab₂ ↔ ({ab₁.fst, ab₁.snd} : Set α) = ({ab₂.fst, ab₂.snd} : Set α) := by rfl
+
+def UPair (α : Type) : Type := Quotient (UPair.Setoid α)
+
+theorem UPair.mk_symm {α : Type} (a b : α) :
+  (⟦(a, b)⟧ : UPair α) = ⟦(b, a)⟧ := by
+  apply Quotient.sound
+  rw [UPair.Setoid_Iff]
+  aesop
+
+def Set_of_UPair {α : Type} : UPair α → Set α :=
+  Quotient.lift
+  (
+    fun ab : α × α ↦ {ab.fst, ab.snd}
+  )
+  (
+    by
+      intro ab₁ ab₃ h
+      rw [UPair.Setoid_Iff] at *
+      apply h
+  )
+
+#check Set_of_UPair ⟦(1, 3)⟧ = {1, 3}
+
+-- ### Alternative Definitions
+namespace Alternative
+
+inductive Int.IsCanonical : ℕ × ℕ → Prop
+  | nonpos {n : ℕ} : Int.IsCanonical (0, n)
+  | nonneg {p : ℕ} : Int.IsCanonical (p, 0)
+
+def Int : Type :=
+  {pn : ℕ × ℕ // Int.IsCanonical pn}
+
+def Int.normalize : ℕ × ℕ → ℕ × ℕ
+  | (p, n) => if p ≥ n then (p - n, 0) else (0, n - p)
+
+theorem Int.IsCanonical_normalize (pn : ℕ × ℕ) :
+  Int.IsCanonical (Int.normalize pn) := by
+  sorry
+
+def UPair.IsCanonical {α : Type} [LinearOrder α] :
+  α × α → Prop
+  | (a, b) => a ≤ b
+
+def UPair (α : Type) [LinearOrder α] : Type :=
+  {ab : α × α // UPair.IsCanonical ab}
+
+
+end Alternative
 end LoVe
