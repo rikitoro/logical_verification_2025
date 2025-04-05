@@ -36,30 +36,52 @@ has that length. -/
 theorem List.length_add :
     ∀xs ys, List.length xs = List.length ys →
       List.length (List.add xs ys) = List.length xs
-  | [], [] =>
-    sorry
-  | x :: xs, y :: ys =>
-    sorry
-  | [], y :: ys =>
-    sorry
-  | x :: xs, [] =>
-    sorry
+  | [], [] => by
+    simp [add]
+  | x :: xs, y :: ys => by
+    simp [add]
+    intro h
+    apply length_add
+    exact h
+  | [], y :: ys => by
+    simp [add]
+  | x :: xs, [] => by
+    simp [add]
+
 
 /- 1.2. Define componentwise addition on vectors using `List.add` and
 `List.length_add`. -/
 
-def Vector.add {n : ℕ} : Vector ℤ n → Vector ℤ n → Vector ℤ n :=
-  sorry
+def Vector.add {n : ℕ} : Vector ℤ n → Vector ℤ n → Vector ℤ n
+  | .mk xs hx, .mk ys hy =>
+    .mk (List.add xs ys) (by
+      rw [← hx]
+      apply List.length_add
+      rw [hy]
+      exact hx
+    )
+
 
 /- 1.3. Show that `List.add` and `Vector.add` are commutative. -/
 
 theorem List.add.comm :
-    ∀xs ys, List.add xs ys = List.add ys xs :=
-  sorry
+    ∀xs ys, List.add xs ys = List.add ys xs
+  | [],       []      => by
+    simp [add]
+  | x :: xs,  y :: ys => by
+    simp [add]
+    apply And.intro
+    . linarith
+    . apply add.comm
+  | [],       y :: ys => by
+    simp [add]
+  | x :: xs, []       => by
+    simp [add]
 
 theorem Vector.add.comm {n : ℕ} (u v : Vector ℤ n) :
-    Vector.add u v = Vector.add v u :=
-  sorry
+    Vector.add u v = Vector.add v u := by
+  apply Subtype.eq
+  apply List.add.comm
 
 
 /- ## Question 2: Integers as Quotients
@@ -75,16 +97,31 @@ Lean's predefined type `Int` (= `ℤ`): -/
 an integer, then `(n, p)` represents its negation. -/
 
 def Int.neg : Int → Int :=
-  sorry
+  Quotient.lift
+  (
+    fun (p, n) ↦ ⟦(n, p)⟧
+  )
+  (
+    by
+      intro pn₁ pn₂ h
+      apply Quotient.sound
+      simp [Int.Setoid_Iff] at *
+      linarith
+  )
 
 /- 2.2. Prove the following theorems about negation. -/
 
 theorem Int.neg_eq (p n : ℕ) :
-    Int.neg ⟦(p, n)⟧ = ⟦(n, p)⟧ :=
-  sorry
+    Int.neg ⟦(p, n)⟧ = ⟦(n, p)⟧ := by
+  rw [neg]
+  apply Quotient.sound
+  simp [Int.Setoid_Iff]
 
 theorem int.neg_neg (a : Int) :
-    Int.neg (Int.neg a) = a :=
-  sorry
+    Int.neg (Int.neg a) = a := by
+  induction a using Quotient.inductionOn with
+  | h pn =>
+    cases pn with
+    | mk p n => simp [Int.neg]
 
 end LoVe
