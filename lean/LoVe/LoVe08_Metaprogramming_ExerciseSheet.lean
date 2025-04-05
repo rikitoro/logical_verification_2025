@@ -122,7 +122,7 @@ skip any declaration that is an implementation detail. -/
 #print cases
 
 partial def casesAnd : TacticM Unit :=
-  withMainContext <| do
+  withMainContext do
     let lctx ← getLCtx
     for ldecl in lctx do
       -- if ! ldecl.isImplementationDetail then

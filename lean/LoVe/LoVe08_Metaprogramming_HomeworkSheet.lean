@@ -34,24 +34,19 @@ You will proceed in three steps.
 introduction rules for `True`, `∧`, and `↔` and that invokes `intro _` for
 `→`/`∀`. The tactic generalizes `intro_and` from the exercise. -/
 
-macro "safe_intros" : tactic => `(
-  tactic | (
-    repeat'
-      first
-      | apply True.intro
-      | apply And.intro
-      | apply Iff.intro
-      | done
-    repeat' intro
-  )
-)
+macro "safe_intros" : tactic => `(tactic | (
+  repeat'
+    first
+    | apply True.intro
+    | apply And.intro
+    | apply Iff.intro
+    | intro
+))
 
 theorem abcd (a b c d : Prop) :
     a → ¬ b ∧ (c ↔ d) :=
   by
     safe_intros
-
-
     /- The proof state should be roughly as follows:
 
         case left
@@ -92,7 +87,16 @@ skip any declaration that is an implementation detail. -/
 #check @Exists
 
 partial def safeCases : TacticM Unit :=
-  sorry
+  withMainContext do
+    let lctx ← getLCtx
+    for ldecl in lctx do
+      if ! ldecl.isImplementationDetail then
+        let ty := ldecl.type
+        if ty.isAppOfArity ``False 0 || ty.isAppOfArity ``And 2 || ty.isAppOfArity ``Exists 2 then
+          cases ldecl.fvarId
+          safeCases
+          return
+
 
 elab "safe_cases" : tactic =>
   safeCases
@@ -124,8 +128,11 @@ theorem abcdef (a b c d e f : Prop) (P : ℕ → Prop)
 on all goals, then `safe_cases` on all emerging subgoals, before it tries
 `assumption` on all emerging subsubgoals. -/
 
-macro "safe" : tactic =>
-  sorry
+macro "safe" : tactic => `(tactic|(
+  safe_intros <;>
+  safe_cases <;>
+  try assumption
+))
 
 theorem abcdef_abcd (a b c d e f : Prop) (P : ℕ → Prop)
       (hneg: ¬ a) (hand : a ∧ b ∧ c) (hor : c ∨ d) (himp : b → e) (hiff : e ↔ f)
