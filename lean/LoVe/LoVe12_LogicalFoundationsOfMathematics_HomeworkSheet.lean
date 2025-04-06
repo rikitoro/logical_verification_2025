@@ -98,9 +98,10 @@ Hints:
 
 theorem exists_minimal_arg_helper (f : ℕ → ℕ) :
     ∀x m, f m = x → ∃n, ∀i, f n ≤ f i
-  | x, m, eq =>
-    by
-      sorry, sorry
+  | x, m, eq => by sorry
+  -- ∀x m, f m = x が成り立つ状況ってある？
+
+
 
 /- Now this interesting theorem falls off: -/
 
