@@ -67,7 +67,8 @@ theorem sillyLoop_from_1_BigStep :
     apply BigStep.while_false
     simp
 
-
+theorem BigStep_deterministic {Ss l r} (hl : Ss ⟹ l) (hr : Ss ⟹ r) : l = r := by
+  sorry
 
 
 end LoVe
