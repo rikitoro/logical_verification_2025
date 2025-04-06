@@ -32,7 +32,7 @@ predicate introduced in the lecture 5 demo. -/
 #print Even
 
 def Eveℕ : Type :=
-  sorry
+  {even : ℕ // Even even}
 
 /- 1.2 (1 point). Prove the following theorem about the `Even` predicate. You will
 need it to answer question 1.3.
@@ -40,37 +40,50 @@ need it to answer question 1.3.
 Hint: The theorems `add_assoc` and `add_comm` might be useful. -/
 
 theorem Even.add {m n : ℕ} (hm : Even m) (hn : Even n) :
-    Even (m + n) :=
-  sorry
+    Even (m + n) := by
+  induction hn with
+  | zero =>
+    simp [hm]
+  | add_two _ _ ih =>
+    apply add_two
+    simp [ih]
 
 /- 1.3 (2 points). Define zero and addition of even numbers by filling in the
 `sorry` placeholders. -/
 
 def Eveℕ.zero : Eveℕ :=
-  sorry
+  .mk 0 (Even.zero)
 
 def Eveℕ.add (m n : Eveℕ) : Eveℕ :=
-  sorry
+  .mk (m.val + n.val) (Even.add m.prop n.prop)
 
 /- 1.4 (4 points). Prove that addition of even numbers is commutative and
 associative, and has 0 as an identity element. -/
 
 theorem Eveℕ.add_comm (m n : Eveℕ) :
-    Eveℕ.add m n = Eveℕ.add n m :=
-  sorry
+    Eveℕ.add m n = Eveℕ.add n m := by
+  apply Subtype.eq
+  simp [add]
+  rw [Nat.add_comm]
 
 theorem Eveℕ.add_assoc (l m n : Eveℕ) :
-    Eveℕ.add (Eveℕ.add l m) n = Eveℕ.add l (Eveℕ.add m n) :=
-  sorry
+    Eveℕ.add (Eveℕ.add l m) n = Eveℕ.add l (Eveℕ.add m n) := by
+  apply Subtype.eq
+  simp [add]
+  rw [Nat.add_assoc]
 
 theorem Eveℕ.add_iden_left (n : Eveℕ) :
-    Eveℕ.add Eveℕ.zero n = n :=
-  sorry
+    Eveℕ.add Eveℕ.zero n = n := by
+  apply Subtype.eq
+  simp [add]
+  rfl
+
 
 theorem Eveℕ.add_iden_right (n : Eveℕ) :
-    Eveℕ.add n Eveℕ.zero = n :=
-  sorry
-
+    Eveℕ.add n Eveℕ.zero = n := by
+  apply Subtype.eq
+  simp [add]
+  rfl
 
 /- ## Question 2 (2 points + 2 bonus points): Hilbert Choice
 
