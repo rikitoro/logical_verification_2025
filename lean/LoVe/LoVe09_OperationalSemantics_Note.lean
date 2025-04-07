@@ -78,9 +78,10 @@ theorem BigStep_deterministic {Ss l r} (hl : Ss ⟹ l) (hr : Ss ⟹ r) : l = r :
   | seq S T s t u hS hT hS_ih hT_ih =>
     cases hr with
     | seq _ _ _ t' _ hS' hT' =>
-      apply hT_ih
-      rw [hS_ih hS']
-      exact hT'
+      cases hS_ih hS' with
+      | refl =>
+        cases hT_ih hT' with
+        | refl => rfl
   | if_true B S T s t hcond hbody hbody_ih =>
     cases hr with
     | if_true _ _ _ _ _ hcond' hbody' =>
@@ -96,9 +97,10 @@ theorem BigStep_deterministic {Ss l r} (hl : Ss ⟹ l) (hr : Ss ⟹ r) : l = r :
   | while_true B S s t u hcond hbody hrest hbody_ih hrest_ih =>
     cases hr with
     | while_true _ _ _ t' _ hcond' hbody' hrest' =>
-      apply hrest_ih
-      rw [hbody_ih hbody']
-      exact hrest'
+      cases hbody_ih hbody' with
+      | refl =>
+        cases hrest_ih hrest' with
+        | refl => rfl
     | while_false _ _ _ hcond' =>
       contradiction
   | while_false B S s hcond =>
