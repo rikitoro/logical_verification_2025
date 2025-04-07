@@ -110,6 +110,105 @@ theorem BigStep_deterministic {Ss l r} (hl : Ss ⟹ l) (hr : Ss ⟹ r) : l = r :
     | while_false _ _ _ hcond' =>
       rfl
 
+@[simp]
+theorem BigStep_skip_Iff {s t} :
+  (Stmt.skip, s) ⟹ t ↔ t = s := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | skip => rfl
+  . intro h
+    rw [h]
+    apply BigStep.skip
 
+-- (x := a, s) ⟹ t
+@[simp]
+theorem BigStep_assign_Iff {x a s t} :
+  (Stmt.assign x a, s) ⟹ t ↔ t = s [x ↦ a s] := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | assign => rfl
+  . intro h
+    rw [h]
+    apply BigStep.assign
+
+-- (S; T, s) ⟹ u
+@[simp]
+theorem BigStep_seq_Iff {S T s u} :
+  (S; T, s) ⟹ u ↔ (∃ t, (S, s) ⟹ t ∧ (T, t) ⟹ u) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | seq _ _ _ t _ hS hT =>
+      apply Exists.intro t
+      apply And.intro hS hT
+  . intro h
+    cases h with
+    | intro t ht =>
+      apply BigStep.seq _ _ _ t
+      apply ht.left
+      apply ht.right
+
+ -- (if B then S else T, s) ⟹ t
+@[simp]
+theorem BigStep_if_Iff {B S T s t} :
+  (Stmt.ifThenElse B S T, s) ⟹  t ↔
+  (B s ∧ (S, s) ⟹ t) ∨ (¬ B s ∧ (T, s) ⟹ t) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | if_true _ _ _ _ _ hcond hbody =>
+      aesop
+      -- apply Or.inl
+      -- apply And.intro
+      -- . exact hcond
+      -- . exact hbody
+    | if_false _ _ _ _ _ hcond hbody =>
+      aesop
+      -- apply Or.inr
+      -- apply And.intro
+      -- . exact hcond
+      -- . exact hbody
+  . intro h
+    cases h with
+    | inl h =>
+      apply BigStep.if_true
+      . apply h.left
+      . apply h.right
+    | inr h =>
+      apply BigStep.if_false
+      . apply h.left
+      . apply h.right
+
+
+-- (while B do S, s) ⟹  u
+theorem BigStep_while_Iff {B S s u} :
+  (Stmt.whileDo B S, s) ⟹ u ↔
+  (B s ∧ ∃ t, (S, s) ⟹ t ∧ (Stmt.whileDo B S, t) ⟹ u)
+  ∨ (¬ B s ∧ u = s) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | while_true _ _ _ t _ hcond hbody hrest =>
+      apply Or.inl
+      apply And.intro
+      . exact hcond
+      . apply Exists.intro t
+        apply And.intro hbody hrest
+    | while_false _ _ _ hcond =>
+      apply Or.inr
+      apply And.intro hcond rfl
+  . intro h
+    cases h with
+    | inl h =>
+      cases h with
+      | intro h h' =>
+        cases h' with
+        | intro t h' => sorry
+
+
+
+    | inr h => sorry
 
 end LoVe
