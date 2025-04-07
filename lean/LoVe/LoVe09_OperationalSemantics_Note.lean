@@ -205,10 +205,160 @@ theorem BigStep_while_Iff {B S s u} :
       cases h with
       | intro h h' =>
         cases h' with
-        | intro t h' => sorry
+        | intro t ht =>
+          apply BigStep.while_true _ _ _ t _
+          . apply h
+          . apply ht.left
+          . apply ht.right
+    | inr h =>
+      cases h with
+      | intro hnB hus =>
+        rw [hus]
+        apply BigStep.while_false
+        apply hnB
+
+@[simp]
+theorem BigStep_while_true_Iff {B S s u} (hcond : B s) :
+  (Stmt.whileDo B S, s) ⟹ u ↔
+  (∃ t, (S, s) ⟹ t ∧ (Stmt.whileDo B S, t) ⟹ u) := by
+  rw [BigStep_while_Iff]
+  simp [hcond]
+
+@[simp]
+theorem BigStep_while_false_Iff {B S s t} (hcond : ¬ B s) :
+  (Stmt.whileDo B S, s) ⟹ t ↔ t = s := by
+  rw [BigStep_while_Iff]
+  simp [hcond]
+
+-- ## Small-Step Semantics
+
+inductive SmallStep : Stmt × State → Stmt × State → Prop where
+  | assign x a s :
+    SmallStep (.assign x a, s) (.skip, s[x ↦ a s])
+  | seq_step S S' T s s' (hS : SmallStep (S, s) (S', s')) :
+    SmallStep (S; T, s) (S'; T, s')
+  | seq_skip T s :
+    SmallStep (.skip; T, s) (T, s)
+  | if_true B S T s (hcond : B s) :
+    SmallStep (.ifThenElse B S T, s) (S, s)
+  | if_false B S T s (hcond : ¬ B s) :
+    SmallStep (.ifThenElse B S T, s) (T, s)
+  | whileDo B S s :
+    SmallStep (.whileDo B S, s) (.ifThenElse B (S; .whileDo B S) .skip, s)
+
+infixr:100 " ⇒ " => SmallStep
+infixr:100 " ⇒* " => RTC SmallStep
+
+theorem sillyLoop_from_1_SmallStep :
+  (sillyLoop, (fun _ ↦ 0)["x" ↦ 1]) ⇒*
+  (.skip, (fun _ ↦ 0)) := by
+  rw [sillyLoop]
+  apply RTC.head
+  . apply SmallStep.whileDo
+  . apply RTC.head
+    . apply SmallStep.if_true
+      aesop
+    . apply RTC.head
+      . apply SmallStep.seq_step
+        apply SmallStep.seq_skip
+      . apply RTC.head
+        . apply SmallStep.seq_step
+          apply SmallStep.assign
+        . apply RTC.head
+          . apply SmallStep.seq_skip
+          . apply RTC.head
+            . apply SmallStep.whileDo
+            . apply RTC.head
+              . apply SmallStep.if_false
+                simp
+              . simp
+                apply RTC.refl
+
+-- ## Properties of the Small-Step Semantics
+
+#print Stmt
+
+theorem SmallStep_final (S s) :
+  (¬ ∃ T t, (S, s) ⇒(T, t)) ↔ S = .skip := by
+  induction S with
+  | skip =>
+    simp
+    intro T t hstep
+    cases hstep
+  | assign x a =>
+    simp
+    apply Exists.intro .skip
+    apply Exists.intro (s[x ↦ a s])
+    apply SmallStep.assign
+  | seq S T ihS ihT =>
+    simp
+    cases Classical.em (S = .skip) with
+    | inl h =>
+      rw [h]
+      apply Exists.intro T
+      apply Exists.intro s
+      apply SmallStep.seq_skip
+    | inr h =>
+      simp [h] at ihS
+      cases ihS with
+      | intro S' hS' =>
+        cases hS' with
+        | intro s' hSs' =>
+          apply Exists.intro (S'; T)
+          apply Exists.intro s'
+          apply SmallStep.seq_step
+          exact hSs'
+  | ifThenElse B S T ihS ihT =>
+    simp
+    cases Classical.em (B s) with
+    | inl h =>
+      apply Exists.intro S
+      apply Exists.intro s
+      apply SmallStep.if_true
+      apply h
+    | inr h =>
+      apply Exists.intro T
+      apply Exists.intro s
+      apply SmallStep.if_false
+      apply h
+  | whileDo B S ihS =>
+    simp
+    apply Exists.intro <| .ifThenElse B (S; .whileDo B S) .skip
+    apply Exists.intro s
+    apply SmallStep.whileDo
+
+#print SmallStep
+
+theorem SmallStep_deterministic {Ss Ll Rr}
+  (hl : Ss ⇒ Ll) (hr : Ss ⇒ Rr) : Ll = Rr := by
+  induction hl generalizing Rr with
+  | assign x a s =>
+    cases hr with
+    | assign _ _ _ => rfl
+  | seq_step S S' T s s' hS ihS =>
+    cases hr with
+    | seq_step _ S'' _ _ s'' hS'' =>
+      have h' := ihS hS''
+      aesop
+    | seq_skip =>
+      cases hS
+  | seq_skip T s =>
+    cases hr with
+    | seq_step _ S' _ _ s' hSkip =>
+      cases hSkip
+    | seq_skip => rfl
+  | if_true B S T s hB =>
+    cases hr with
+    | if_true => rfl
+    | if_false => contradiction
+  | if_false B S T s hB =>
+    cases hr with
+    | if_true => contradiction
+    | if_false => rfl
+  | whileDo B S s =>
+    cases hr with
+    | whileDo => rfl
 
 
-
-    | inr h => sorry
 
 end LoVe
