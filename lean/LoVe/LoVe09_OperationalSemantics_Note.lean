@@ -68,7 +68,46 @@ theorem sillyLoop_from_1_BigStep :
     simp
 
 theorem BigStep_deterministic {Ss l r} (hl : Ss ⟹ l) (hr : Ss ⟹ r) : l = r := by
-  sorry
+  induction hl generalizing r with
+  | skip s =>
+    cases hr with
+    | skip => rfl
+  | assign x a s =>
+    cases hr with
+    | assign => rfl
+  | seq S T s t u hS hT hS_ih hT_ih =>
+    cases hr with
+    | seq _ _ _ t' _ hS' hT' =>
+      apply hT_ih
+      rw [hS_ih hS']
+      exact hT'
+  | if_true B S T s t hcond hbody hbody_ih =>
+    cases hr with
+    | if_true _ _ _ _ _ hcond' hbody' =>
+      apply hbody_ih hbody'
+    | if_false _ _ _ _ _ hcond' hbody' =>
+      contradiction
+  | if_false B S T s t hcond hbody hbody_ih =>
+    cases hr with
+    | if_true _ _ _ _ _ hcond' hbody' =>
+      contradiction
+    | if_false _ _ _ _ _ hcond' hbody' =>
+      apply hbody_ih hbody'
+  | while_true B S s t u hcond hbody hrest hbody_ih hrest_ih =>
+    cases hr with
+    | while_true _ _ _ t' _ hcond' hbody' hrest' =>
+      apply hrest_ih
+      rw [hbody_ih hbody']
+      exact hrest'
+    | while_false _ _ _ hcond' =>
+      contradiction
+  | while_false B S s hcond =>
+    cases hr with
+    | while_true _ _ _ t' _ hcond' hbody' hrest' =>
+      contradiction
+    | while_false _ _ _ hcond' =>
+      rfl
+
 
 
 end LoVe
