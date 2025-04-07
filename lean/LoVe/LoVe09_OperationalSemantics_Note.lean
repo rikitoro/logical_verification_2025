@@ -359,6 +359,51 @@ theorem SmallStep_deterministic {Ss Ll Rr}
     cases hr with
     | whileDo => rfl
 
+theorem SmallStep_skip {S s t} :
+  ¬ ((.skip, s) ⇒ (S, t)) := by
+  intro h
+  cases h
+
+@[simp]
+theorem SmallStep_seq_Iff {S T s U t} :
+  (S; T, s) ⇒ (U, t) ↔
+  (∃ S' t', (S, s) ⇒(S', t') ∧ (U, t) = (S'; T, t'))
+  ∨ (S = .skip ∧ (U, t) = (T, s)) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | seq_step _ S' _ _ _ hS' =>
+      apply Or.inl
+      apply Exists.intro S'
+      apply Exists.intro t
+      apply And.intro
+      . exact hS'
+      . rfl
+    | seq_skip =>
+      apply Or.inr
+      simp
+  . intro h
+    cases h with
+    | inl h =>
+      cases h with
+      | intro S' hS' =>
+        cases hS' with
+        | intro s' hSs' =>
+          cases hSs' with
+          | intro hS hUt =>
+            rw [hUt]
+            apply SmallStep.seq_step
+            exact hS
+    | inr h =>
+      cases h with
+      | intro hS hUt =>
+        rw [hUt, hS]
+        apply SmallStep.seq_skip
+
+
+
+
+
 
 
 end LoVe
