@@ -401,9 +401,35 @@ theorem SmallStep_seq_Iff {S T s U t} :
         apply SmallStep.seq_skip
 
 
+theorem SmallStep_if_Iff {B S T s U t} :
+  (Stmt.ifThenElse B S T, s) ⇒ (U, t) ↔
+  (B s ∧ (U, t) = (S, s)) ∨ (¬ B s ∧ (U, t) = (T, s)) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | if_true _ _ _ _ hBs =>
+      apply Or.inl
+      apply And.intro hBs rfl
+    | if_false _ _ _ _ hnBs =>
+      apply Or.inr
+      apply And.intro hnBs rfl
+  . intro h
+    cases h with
+    | inl h =>
+      cases h with
+      | intro hBs hUt =>
+        rw [hUt]
+        apply SmallStep.if_true
+        . apply hBs
+    | inr h =>
+      cases h with
+      | intro hnBs hUt =>
+        rw [hUt]
+        apply SmallStep.if_false
+        apply hnBs
 
-
-
+theorem BigStep_Iff_RTC_SmallStep {S s t} :
+  (S, s) ⟹ t ↔ (S, s) ⇒* (.skip, t) := by sorry
 
 
 end LoVe
