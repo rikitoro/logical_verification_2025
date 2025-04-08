@@ -56,15 +56,23 @@ specification of GCL above. -/
 
 inductive BigStep : (Stmt × State) → State → Prop
   -- enter the missing `assign` rule here
+  | assign x a s :
+    BigStep (.assign x a, s) (s[x ↦ a s])
   | assert (B s) (hB : B s) :
     BigStep (Stmt.assert B, s) s
   -- enter the missing `seq` rule here
+  | seq S T s t u (hS : BigStep (S, s) t) (hT : BigStep (T, t) u) :
+    BigStep (S; T, s) u
   -- below, `Ss[i]'hless` returns element `i` of `Ss`, which exists thanks to
   -- condition `hless`
   | choice (Ss s t i) (hless : i < List.length Ss)
       (hbody : BigStep (Ss[i]'hless, s) t) :
     BigStep (Stmt.choice Ss, s) t
   -- enter the missing `loop` rules here
+  | loop S s t u (hbody : BigStep (S, s) t) (hrest : BigStep (.loop S, t) u):
+    BigStep (.loop S, s) u
+  | loop_skip S s :
+    BigStep (.loop S, s) s
 
 infixl:110 " ⟹ " => BigStep
 
@@ -72,28 +80,92 @@ infixl:110 " ⟹ " => BigStep
 WHILE language. -/
 
 @[simp] theorem BigStep_assign_iff {x a s t} :
-    (Stmt.assign x a, s) ⟹ t ↔ t = s[x ↦ a s] :=
-  sorry
+    (Stmt.assign x a, s) ⟹ t ↔ t = s[x ↦ a s] := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | assign => rfl
+  . intro h
+    rw [h]
+    apply BigStep.assign
 
 @[simp] theorem BigStep_assert {B s t} :
-    (Stmt.assert B, s) ⟹ t ↔ t = s ∧ B s :=
-  sorry
+    (Stmt.assert B, s) ⟹ t ↔ t = s ∧ B s := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | assert =>
+      apply And.intro rfl hB
+  . intro h
+    cases h with
+    | intro hts hBs =>
+      rw [hts]
+      apply BigStep.assert
+      apply hBs
 
 @[simp] theorem BigStep_seq_iff {S₁ S₂ s t} :
-    (Stmt.seq S₁ S₂, s) ⟹ t ↔ (∃u, (S₁, s) ⟹ u ∧ (S₂, u) ⟹ t) :=
-  sorry
+    (Stmt.seq S₁ S₂, s) ⟹ t ↔ (∃u, (S₁, s) ⟹ u ∧ (S₂, u) ⟹ t) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | seq _ _ _ t' _ =>
+      apply Exists.intro t'
+      apply And.intro hS hT
+  . intro h
+    cases h with
+    | intro s' hs' =>
+      cases hs' with
+      | intro hss' hs't =>
+        apply BigStep.seq
+        . apply hss'
+        . apply hs't
 
 theorem BigStep_loop {S s u} :
     (Stmt.loop S, s) ⟹ u ↔
-    (s = u ∨ (∃t, (S, s) ⟹ t ∧ (Stmt.loop S, t) ⟹ u)) :=
-  sorry
+    (s = u ∨ (∃t, (S, s) ⟹ t ∧ (Stmt.loop S, t) ⟹ u)) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | loop _ _ _ _ hb hr =>
+      apply Or.inr
+      apply Exists.intro t
+      apply And.intro hb hr
+    | loop_skip _ _ =>
+      apply Or.inl
+      rfl
+  . intro h
+    cases h with
+    | inl h =>
+      rw [h]
+      apply BigStep.loop_skip
+    | inr h =>
+      cases h with
+      | intro t ht =>
+        cases ht with
+        | intro hst htu =>
+          apply BigStep.loop
+          . apply hst
+          . apply htu
 
 /- This one is more difficult: -/
 
 @[simp] theorem BigStep_choice {Ss s t} :
     (Stmt.choice Ss, s) ⟹ t ↔
-    (∃(i : ℕ) (hless : i < List.length Ss), (Ss[i]'hless, s) ⟹ t) :=
-  sorry
+    (∃(i : ℕ) (hless : i < List.length Ss), (Ss[i]'hless, s) ⟹ t) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | choice =>
+      apply Exists.intro i
+      apply Exists.intro hless
+      apply hbody
+  . intro h
+    cases h with
+    | intro i hi =>
+      cases hi with
+      | intro hless h' =>
+        apply BigStep.choice _ _ _ i hless
+        apply h'
 
 end GCL
 
