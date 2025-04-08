@@ -176,11 +176,11 @@ def gcl_of : Stmt → GCL.Stmt
   | Stmt.skip =>
     GCL.Stmt.assert (fun _ ↦ True)
   | Stmt.assign x a =>
-    sorry
+    .assign x a
   | S; T =>
-    sorry
+    .seq (gcl_of S) (gcl_of T)
   | Stmt.ifThenElse B S T  =>
-    sorry
+    .choice [.assert B; gcl_of S, .assert (fun s ↦ ¬ B s); gcl_of T]
   | Stmt.whileDo B S =>
     sorry
 
