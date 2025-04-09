@@ -226,20 +226,78 @@ theorem BigStepEquiv.trans {S₁ S₂ S₃} (h₁₂ : S₁ ~ S₂) (h₂₃ : S
 /- 2.1. Prove the following program equivalences. -/
 
 theorem BigStepEquiv.skip_assign_id {x} :
-    Stmt.assign x (fun s ↦ s x) ~ Stmt.skip :=
-  sorry
+    Stmt.assign x (fun s ↦ s x) ~ Stmt.skip := by
+  intro s t
+  apply Iff.intro
+  . intro h
+    cases h with
+    | assign =>
+      simp only [update_id, BigStep_skip_Iff]
+  . intro h
+    cases h with
+    | skip =>
+      simp only [BigStep_assign_Iff, update_id]
 
 theorem BigStepEquiv.seq_skip_left {S} :
-    Stmt.skip; S ~ S :=
-  sorry
+    Stmt.skip; S ~ S := by
+  intro s t
+  apply Iff.intro
+  . intro h
+    cases h with
+    | seq _ _ _ t' _ hS hT =>
+      cases hS with
+      | skip =>
+        exact hT
+  . intro h
+    apply BigStep.seq _ _ _ s
+    . apply BigStep.skip
+    exact h
 
 theorem BigStepEquiv.seq_skip_right {S} :
-    S; Stmt.skip ~ S :=
-  sorry
+    S; Stmt.skip ~ S := by
+  intro s t
+  apply Iff.intro
+  . intro h
+    cases h with
+    | seq _ _ _ t' _ hS hT =>
+      cases hT with
+      | skip =>
+        exact hS
+  . intro h
+    apply BigStep.seq _ _ s t
+    . apply h
+    . apply BigStep.skip
 
 theorem BigStepEquiv.if_seq_while_skip {B S} :
-    Stmt.ifThenElse B (S; Stmt.whileDo B S) Stmt.skip ~ Stmt.whileDo B S :=
-  sorry
+    Stmt.ifThenElse B (S; Stmt.whileDo B S) Stmt.skip ~ Stmt.whileDo B S := by
+  intro s t
+  apply Iff.intro
+  . intro h
+    cases h with
+    | if_true =>
+      cases hbody with
+      | seq =>
+        apply BigStep.while_true
+        apply hcond
+        apply hS
+        apply hT
+    | if_false =>
+      cases hbody with
+      | skip =>
+        apply BigStep.while_false
+        apply hcond
+  . intro h
+    cases h with
+    | while_true =>
+      apply BigStep.if_true
+      apply hcond
+      apply BigStep.seq
+      apply hbody
+      apply hrest
+    | while_false =>
+      apply BigStep.if_false
+      apply hcond
+      simp
 
 /- 2.2 (**optional**). Program equivalence can be used to replace subprograms
 by other subprograms with the same semantics. Prove the following so-called
@@ -247,11 +305,31 @@ congruence rules that facilitate such replacement: -/
 
 theorem BigStepEquiv.seq_congr {S₁ S₂ T₁ T₂} (hS : S₁ ~ S₂)
       (hT : T₁ ~ T₂) :
-    S₁; T₁ ~ S₂; T₂ :=
-  sorry
+    S₁; T₁ ~ S₂; T₂ := by
+  rw [BigStepEquiv] at *
+  -- aesop
+  intro s t
+  apply Iff.intro
+  . intro h
+    cases h with
+    | seq =>
+      apply BigStep.seq
+      rw [← hS]
+      apply hS_1
+      rw [← hT]
+      apply hT_1
+  . intro h
+    cases h with
+    | seq =>
+      apply BigStep.seq
+      rw [hS]
+      apply hS_1
+      rw [hT]
+      apply hT_1
 
 theorem BigStepEquiv.if_congr {B S₁ S₂ T₁ T₂} (hS : S₁ ~ S₂) (hT : T₁ ~ T₂) :
-    Stmt.ifThenElse B S₁ T₁ ~ Stmt.ifThenElse B S₂ T₂ :=
-  sorry
+    Stmt.ifThenElse B S₁ T₁ ~ Stmt.ifThenElse B S₂ T₂ := by
+  rw [BigStepEquiv] at *
+  aesop
 
 end LoVe
