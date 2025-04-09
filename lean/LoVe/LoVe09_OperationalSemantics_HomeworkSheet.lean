@@ -23,6 +23,9 @@ function: -/
 #check AExp
 #check eval
 
+#print AExp
+#print eval
+
 /- Let us introduce the following abbreviation for an environment that maps
 variable names to values: -/
 
@@ -35,7 +38,20 @@ an arithmetic expression, an environment, and the value to which the expression
 evaluates in the given environment: -/
 
 inductive BigStep : AExp × Envir → ℤ → Prop
+  -- LoVe.AExp.num : ℤ → AExp
   | num (i env) : BigStep (AExp.num i, env) i
+  -- AExp.var : String → AExp
+  | var x env     : BigStep (.var x, env) (env x)
+  -- LoVe.AExp.add : AExp → AExp → AExp
+  | add e₁ e₂ env : BigStep (.add e₁ e₂, env) (eval env e₁ + eval env e₂)
+  -- LoVe.AExp.sub : AExp → AExp → AExp
+  | sub e₁ e₂ env : BigStep (.sub e₁ e₂, env) (eval env e₁ - eval env e₂)
+  -- LoVe.AExp.mul : AExp → AExp → AExp
+  | mul e₁ e₂ env : BigStep (.mul e₁ e₂, env) (eval env e₁ * eval env e₂)
+  -- LoVe.AExp.div : AExp → AExp → AExp
+  | div e₁ e₂ env : BigStep (.div e₁ e₂, env) (eval env e₁ / eval env e₂)
+
+
 
 infix:60 " ⟹ " => BigStep
 
@@ -46,15 +62,21 @@ Hint: It may help to first prove
 `(AExp.add (AExp.num 2) (AExp.num 2), env) ⟹ 2 + 2`. -/
 
 theorem BigStep_add_two_two (env : Envir) :
-    (AExp.add (AExp.num 2) (AExp.num 2), env) ⟹ 4 :=
-  sorry
+    (AExp.add (AExp.num 2) (AExp.num 2), env) ⟹ 4 := by
+  apply BigStep.add
 
 /- 1.3 (2 points). Prove that the big-step semantics is sound with respect to
 the `eval` function: -/
 
 theorem BigStep_sound (aenv : AExp × Envir) (i : ℤ) (hstep : aenv ⟹ i) :
-    eval (Prod.snd aenv) (Prod.fst aenv) = i :=
-  sorry
+    eval (Prod.snd aenv) (Prod.fst aenv) = i := by
+  cases hstep with
+  | num => rfl
+  | var => rfl
+  | add => rfl
+  | sub => rfl
+  | mul => rfl
+  | div => rfl
 
 
 /- ## Question 2 (5 points + 1 bonus point): Semantics of Regular Expressions
