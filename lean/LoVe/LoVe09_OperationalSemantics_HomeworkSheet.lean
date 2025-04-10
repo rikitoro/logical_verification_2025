@@ -149,32 +149,101 @@ inductive Matches {α : Type} : Regex α → List α → Prop
 /- 2.2 (4 points). Prove the following inversion rules. -/
 
 @[simp] theorem Matches_atom {α : Type} {s : List α} {a : α} :
-    Matches (Regex.atom a) s ↔ s = [a] :=
-  sorry
+    Matches (Regex.atom a) s ↔ s = [a] := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | atom => rfl
+  . intro h
+    rw [h]
+    apply Matches.atom
+
 
 @[simp] theorem Matches_nothing {α : Type} {s : List α} :
-    ¬ Matches Regex.nothing s :=
-  sorry
+    ¬ Matches Regex.nothing s := by
+  intro h
+  cases h
 
 @[simp] theorem Matches_empty {α : Type} {s : List α} :
-    Matches Regex.empty s ↔ s = [] :=
-  sorry
+    Matches Regex.empty s ↔ s = [] := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | empty => rfl
+  . intro h
+    rw [h]
+    apply Matches.empty
 
 @[simp] theorem Matches_concat {α : Type} {s : List α} {r₁ r₂ : Regex α} :
     Matches (Regex.concat r₁ r₂) s
-    ↔ (∃s₁ s₂, Matches r₁ s₁ ∧ Matches r₂ s₂ ∧ s = s₁ ++ s₂) :=
-  sorry
+    ↔ (∃s₁ s₂, Matches r₁ s₁ ∧ Matches r₂ s₂ ∧ s = s₁ ++ s₂) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | concat =>
+      apply Exists.intro s₁
+      apply Exists.intro s₂
+      aesop
+  . intro h
+    cases h with
+    | intro s₁ h =>
+      cases h with
+      | intro s₂ h =>
+        rw [h.right.right]
+        apply Matches.concat
+        . apply h.left
+        . apply h.right.left
 
 @[simp] theorem Matches_alt {α : Type} {s : List α} {r₁ r₂ : Regex α} :
-    Matches (Regex.alt r₁ r₂) s ↔ (Matches r₁ s ∨ Matches r₂ s) :=
-  sorry
+    Matches (Regex.alt r₁ r₂) s ↔ (Matches r₁ s ∨ Matches r₂ s) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | alt_left =>
+      left
+      exact h_1
+    | alt_right =>
+      right
+      exact h_1
+  . intro h
+    cases h with
+    | inl =>
+      apply Matches.alt_left
+      exact h_1
+    | inr =>
+      apply Matches.alt_right
+      exact h_1
 
 /- 2.3 (1 bonus point). Prove the following inversion rule. -/
 
 theorem Matches_star {α : Type} {s : List α} {r : Regex α} :
     Matches (Regex.star r) s ↔
     s = []
-    ∨ (∃s₁ s₂, Matches r s₁ ∧ Matches (Regex.star r) s₂ ∧ s = s₁ ++ s₂) :=
-  sorry
+    ∨ (∃s₁ s₂, Matches r s₁ ∧ Matches (Regex.star r) s₂ ∧ s = s₁ ++ s₂) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | star_base =>
+      apply Or.inl
+      rfl
+    | star_step =>
+      apply Or.inr
+      apply Exists.intro s_1
+      apply Exists.intro s'
+      aesop
+  . intro h
+    cases h with
+    | inl =>
+      rw [h_1]
+      apply Matches.star_base
+    | inr =>
+      cases h_1  with
+      | intro s₁ h =>
+        cases h with
+        | intro s₂ h =>
+          rw [h.right.right]
+          apply Matches.star_step
+          . apply h.left
+          . apply h.right.left
 
 end LoVe
