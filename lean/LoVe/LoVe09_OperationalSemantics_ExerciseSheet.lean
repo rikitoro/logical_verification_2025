@@ -69,9 +69,9 @@ inductive BigStep : (Stmt × State) → State → Prop
       (hbody : BigStep (Ss[i]'hless, s) t) :
     BigStep (Stmt.choice Ss, s) t
   -- enter the missing `loop` rules here
-  | loop S s t u (hbody : BigStep (S, s) t) (hrest : BigStep (.loop S, t) u):
+  | loop_step S s t u (hbody : BigStep (S, s) t) (hrest : BigStep (.loop S, t) u):
     BigStep (.loop S, s) u
-  | loop_skip S s :
+  | loop_base S s :
     BigStep (.loop S, s) s
 
 infixl:110 " ⟹ " => BigStep
@@ -126,24 +126,24 @@ theorem BigStep_loop {S s u} :
   apply Iff.intro
   . intro h
     cases h with
-    | loop _ _ _ _ hb hr =>
+    | loop_step _ _ _ _ hb hr =>
       apply Or.inr
       apply Exists.intro t
       apply And.intro hb hr
-    | loop_skip _ _ =>
+    | loop_base _ _ =>
       apply Or.inl
       rfl
   . intro h
     cases h with
     | inl h =>
       rw [h]
-      apply BigStep.loop_skip
+      apply BigStep.loop_base
     | inr h =>
       cases h with
       | intro t ht =>
         cases ht with
         | intro hst htu =>
-          apply BigStep.loop
+          apply BigStep.loop_step
           . apply hst
           . apply htu
 
