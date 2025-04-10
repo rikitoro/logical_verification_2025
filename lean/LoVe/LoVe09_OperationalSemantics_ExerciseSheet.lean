@@ -182,7 +182,7 @@ def gcl_of : Stmt → GCL.Stmt
   | Stmt.ifThenElse B S T  =>
     .choice [.assert B; gcl_of S, .assert (fun s ↦ ¬ B s); gcl_of T]
   | Stmt.whileDo B S =>
-    sorry
+    .loop (.assert B; (gcl_of S)); .assert (fun s ↦ ¬ B s)
 
 /- 1.4. In the definition of `gcl_of` above, `skip` is translated to
 `assert (fun _ ↦ True)`. Looking at the big-step semantics of both constructs,
