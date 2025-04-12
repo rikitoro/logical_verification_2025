@@ -174,8 +174,18 @@ one-point rule for `∃` is inconsistent, using a structured proof. -/
 axiom Exists.one_point_wrong {α : Type} (t : α) (P : α → Prop) :
     (∃x : α, x = t → P x) ↔ P t
 
+#check @Exists.one_point_wrong ℕ 0 fun x ↦ x = 1
+
 theorem Exists.proof_of_False :
     False :=
-  sorry
+  have h := Exists.one_point_wrong 0 (fun x ↦ 1 = x)
+  have hex : ∃ x, x = 0 → 1 = x :=
+    -- apply Exists.intro 1
+    -- intro _
+    -- rfl
+    Exists.intro 1 <| fun _ ↦ rfl
+  have h' := h.mp hex
+-- by cases h'
+Nat.one_ne_zero h'
 
 end LoVe
