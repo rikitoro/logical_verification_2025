@@ -186,7 +186,31 @@ theorem SWAP_correct (a₀ b₀ : ℕ) :
   aesop
 
 
-#print BigStep
+-- ## Adding Two Numbers
+
+def ADD : Stmt :=
+  .whileDo (fun s ↦ s "n" ≠ 0) <|
+    .assign "n" (fun s ↦ s "n" - 1);
+    .assign "m" (fun s ↦ s "m" + 1)
+
+theorem ADD_correct (n₀ m₀ : ℕ) :
+  {* fun s ↦ s "n" = n₀ ∧ s "m" = m₀ *}
+  (ADD)
+  {* fun s ↦ s "n" = 0 ∧ s "m" = n₀ + m₀ *} :=
+  while_intro' (fun s : State ↦ s "n" + s "m" = n₀ + m₀)
+  (by
+    apply seq_intro'
+    . apply assign_intro
+    . apply assign_intro'
+      aesop
+  )
+  (by aesop)
+  (by aesop)
+
+#print while_intro'
+
+
+
 
 end PartialHoare
 
