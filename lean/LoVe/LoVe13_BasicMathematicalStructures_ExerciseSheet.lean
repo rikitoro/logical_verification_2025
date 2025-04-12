@@ -97,8 +97,15 @@ Recall the following definitions from the lecture: -/
 tree. -/
 
 theorem Finset.elems_mirror (t : Tree ℕ) :
-    Finset.elems (mirror t) = Finset.elems t :=
-  sorry
+    Finset.elems (mirror t) = Finset.elems t := by
+  induction t with
+  | nil => rfl
+  | node a l r ihl ihr =>
+    rw [mirror]
+    rw [elems]
+    rw [ihl, ihr]
+    rw [elems]
+    aesop
 
 /- 2.2. Show that this does not hold for the list of nodes by providing a
 tree `t` for which `List.elems t ≠ List.elems (mirror t)`.
