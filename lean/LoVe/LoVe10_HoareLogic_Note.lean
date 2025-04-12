@@ -80,8 +80,113 @@ theorem while_intro (P) {B S}
   (h : {* fun s ↦ P s ∧ B s *} (S) {* P *}) :
   {* P *} (.whileDo B S) {* fun s ↦ P s ∧ ¬ B s *} := by
   rw [PartialHoare] at *
-  intro s t hPs hwhileBS
-  sorry
+  intro s t hs hst
+  generalize ws_eq : (Stmt.whileDo B S, s) = Ss
+  rw [ws_eq] at hst
+  induction hst generalizing s with
+  | skip          => cases ws_eq
+  | assign        => cases ws_eq
+  | seq           => cases ws_eq
+  | if_true       => cases ws_eq
+  | if_false      => cases ws_eq
+  | while_true    =>
+    cases ws_eq
+    apply hrest_ih
+    . apply h
+      apply And.intro
+      . apply hs
+      . apply hcond
+      apply hbody
+    . rfl
+  | while_false   =>
+    cases ws_eq
+    aesop
+
+theorem consequence {P P' Q Q' S}
+  (h : {* P *} (S) {* Q *}) (hp : ∀ s, P' s → P s) (hq : ∀ s, Q s → Q' s) :
+  {* P' *} (S) {* Q' *} := by
+  rw [PartialHoare] at *
+  intro s t hs' hst
+  apply hq
+  apply h
+  apply hp
+  apply hs'
+  apply hst
+
+theorem consequence_left (P') {P Q S}
+  (h : {* P *} (S) {* Q *}) (hp : ∀ s, P' s → P s) :
+  {* P' *} (S) {* Q *} := by
+  apply consequence <;> aesop
+
+theorem consequence_right (Q) {Q' P S}
+  (h : {* P *} (S) {* Q *}) (hq : ∀ s, Q s → Q' s) :
+  {* P *} (S) {* Q' *} := by
+  apply consequence <;> aesop
+
+theorem skip_intro' {P Q} (h : ∀ s, P s → Q s) :
+  {* P *} (.skip) {* Q *} := by
+  apply consequence
+  apply skip_intro
+  . apply h
+  . aesop
+
+theorem assign_intro' {P Q x a} (h : ∀ s, P s → Q (s[x ↦ a s])) :
+  {* P *} (.assign x a) {* Q *} := by
+  apply consequence
+  apply assign_intro
+  . apply h
+  . aesop
+
+theorem  seq_intro' {P Q R S T} (hT : {* Q *} (T) {* R *}) (hS : {* P *} (S) {* Q *}) :
+  {* P *} (S; T) {* R *} := by
+  apply seq_intro <;> aesop
+
+theorem while_intro' {B P Q S} (I)
+  (hS : {* fun s ↦ I s ∧ B s *} (S) {* I *})
+  (hP : ∀ s, P s → I s)
+  (hQ : ∀ s, ¬ B s → I s → Q s) :
+  {* P *} (.whileDo B S) {* Q *} := by
+  apply consequence
+  apply while_intro
+  apply hS
+  aesop
+  aesop
+
+theorem assign_intro_forward (P) {x a} :
+  {* P *} (.assign x a) {* fun s ↦ ∃ n₀, P (s[x ↦ n₀]) ∧ s x = a (s[x ↦ n₀]) *} := by
+  apply assign_intro'
+  intro s hs
+  apply Exists.intro (s x)
+  aesop
+
+theorem assign_intro_backward (Q) {x a} :
+  {* fun s ↦ ∃ n', Q (s[x ↦ n']) ∧ n' = a s *} (.assign x a) {* Q *} := by
+  apply assign_intro'
+  intro s hs
+  cases hs with
+  | intro n' =>
+    aesop
+
+-- ## Exchanging Two Variable
+
+def SWAP : Stmt :=
+  .assign "t" (fun s ↦ s "a");
+  .assign "a" (fun s ↦ s "b");
+  .assign "b" (fun s ↦ s "t")
+
+theorem SWAP_correct (a₀ b₀ : ℕ) :
+  {* fun s ↦ s "a" = a₀ ∧ s "b" = b₀ *}
+  (SWAP)
+  {* fun s ↦ s "a" = b₀ ∧ s "b" = a₀ *} := by
+  apply seq_intro'
+  apply seq_intro'
+  apply assign_intro
+  apply assign_intro
+  apply assign_intro'
+  aesop
+
+
+#print BigStep
 
 end PartialHoare
 

@@ -185,7 +185,7 @@ theorem Exists.proof_of_False :
     -- rfl
     Exists.intro 1 <| fun _ ↦ rfl
   have h' := h.mp hex
--- by cases h'
-Nat.one_ne_zero h'
+  -- by cases h'
+  Nat.one_ne_zero h'
 
 end LoVe
