@@ -35,12 +35,18 @@ def Tree.graft {α : Type} : Tree α → Tree α → Tree α
 /- 1.1. Prove the following two theorems by structural induction on `t`. -/
 
 theorem Tree.graft_assoc {α : Type} (t u v : Tree α) :
-    Tree.graft (Tree.graft t u) v = Tree.graft t (Tree.graft u v) :=
-  sorry
+    Tree.graft (Tree.graft t u) v = Tree.graft t (Tree.graft u v) := by
+  induction t with
+  | nil => rfl
+  | node a l r ihl ihr =>
+    simp [graft, ihl, ihr]
 
 theorem Tree.graft_nil {α : Type} (t : Tree α) :
-    Tree.graft t Tree.nil = t :=
-  sorry
+    Tree.graft t Tree.nil = t := by
+  induction t with
+  | nil => rfl
+  | node a l r ihl ihr =>
+    simp [graft, ihl, ihr]
 
 /- 1.2. Declare `Tree` an instance of `AddMonoid` using `graft` as the
 addition operator. -/
@@ -49,15 +55,16 @@ addition operator. -/
 
 instance Tree.AddMonoid {α : Type} : AddMonoid (Tree α) :=
   { add       :=
-      sorry
+      graft
     add_assoc :=
-      sorry
+      graft_assoc
     zero      :=
-      sorry
+      .nil
     add_zero  :=
-      sorry
-    zero_add  :=
-      sorry
+      graft_nil
+    zero_add  := by
+      intro a
+      rfl
     nsmul     := @nsmulRec (Tree α) (Zero.mk Tree.nil) (Add.mk Tree.graft)
   }
 
@@ -72,9 +79,12 @@ declared an instance of `AddGroup`. -/
 with `graft` as addition does not constitute an `AddGroup`. -/
 
 theorem Tree.add_left_neg_counterexample :
-    ∃x : Tree ℕ, ∀y : Tree ℕ, Tree.graft y x ≠ Tree.nil :=
-  sorry
-
+    ∃x : Tree ℕ, ∀y : Tree ℕ, Tree.graft y x ≠ Tree.nil := by
+  apply Exists.intro <| .node 1 .nil .nil
+  intro y h
+  cases y with
+  | nil => cases h
+  | node a l r => cases h
 
 /- ## Question 2: Multisets and Finsets
 
@@ -96,7 +106,9 @@ tree `t` for which `List.elems t ≠ List.elems (mirror t)`.
 If you define a suitable counterexample, the proof below will succeed. -/
 
 def rottenTree : Tree ℕ :=
-  sorry
+  .node 0
+    (.node 1 .nil .nil)
+    (.node 2 .nil .nil)
 
 #eval List.elems rottenTree
 #eval List.elems (mirror rottenTree)
