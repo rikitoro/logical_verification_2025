@@ -21,15 +21,37 @@ namespace LoVe
 
 theorem Monotone_restrict {α β : Type} [PartialOrder α] (f : α → Set (β × β))
       (p : β → Prop) (hf : Monotone f) :
-    Monotone (fun a ↦ f a ⇃ p) :=
-  sorry
+    Monotone (fun a ↦ f a ⇃ p) := by
+  intro a₁ a₂ ha
+  simp
+  intro b hb
+  rw [restrict] at *
+  simp at *
+  cases hb with
+  | intro hl hr =>
+    apply And.intro
+    . apply hf
+      apply ha
+      exact hl
+    . exact hr
 
 /- 1.2. Prove its cousin. -/
 
 theorem Monotone_comp {α β : Type} [PartialOrder α] (f g : α → Set (β × β))
       (hf : Monotone f) (hg : Monotone g) :
-    Monotone (fun a ↦ f a ◯ g a) :=
-  sorry
+    Monotone (fun a ↦ f a ◯ g a) := by
+  intro a₁ a₂ ha
+  simp at *
+  intro bb hbb
+  cases hbb with
+  | intro =>
+    cases h with
+    | intro =>
+      simp [comp]
+      apply Exists.intro w
+      apply And.intro
+      . sorry
+      . sorry
 
 
 /- ## Question 2: Regular Expressions
