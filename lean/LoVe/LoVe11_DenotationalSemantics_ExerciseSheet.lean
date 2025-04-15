@@ -50,8 +50,12 @@ theorem Monotone_comp {α β : Type} [PartialOrder α] (f g : α → Set (β × 
       simp [comp]
       apply Exists.intro w
       apply And.intro
-      . sorry
-      . sorry
+      . apply hf
+        apply ha
+        apply left
+      . apply hg
+        apply ha
+        apply right
 
 
 /- ## Question 2: Regular Expressions
@@ -106,13 +110,25 @@ Hint: Exploit the correspondence with the WHILE language. -/
 def rel_of_Regex {α : Type} : Regex (Set (α × α)) → Set (α × α)
   | Regex.nothing      => ∅
   | Regex.empty        => Id
-  -- enter the missing cases here
+   -- enter the missing cases here
+  | Regex.atom r       => r
+  | Regex.concat r₁ r₂ => rel_of_Regex r₁ ◯ rel_of_Regex r₂
+  | Regex.alt r₁ r₂    => rel_of_Regex r₁ ∪ rel_of_Regex r₂
+  | Regex.star r       => lfp (fun x ↦ (rel_of_Regex r ◯ x) ∪ Id)
+
 
 /- 2.2. Prove the following recursive equation about your definition. -/
 
 theorem rel_of_Regex_Star {α : Type} (r : Regex (Set (α × α))) :
     rel_of_Regex (Regex.star r) =
-    rel_of_Regex (Regex.alt (Regex.concat r (Regex.star r)) Regex.empty) :=
-  sorry
+    rel_of_Regex (Regex.alt (Regex.concat r (Regex.star r)) Regex.empty) := by
+  simp [rel_of_Regex]
+  apply lfp_eq
+  apply Monotone_union
+  . apply Monotone_comp
+    apply Monotone_const
+    apply Monotone_id
+  . apply Monotone_const
+
 
 end LoVe
