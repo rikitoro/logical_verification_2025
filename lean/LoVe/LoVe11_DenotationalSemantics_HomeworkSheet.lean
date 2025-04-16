@@ -65,17 +65,37 @@ Hints:
 * To reduce `f = g` to `∀x, f x = g x`, use the theorem `funext`. -/
 
 theorem pure_bind {α β : Type} (a : α) (f : α → Nondet β) :
-    pure a >>= f = f a :=
- sorry
+    pure a >>= f = f a := by
+  simp [Bind.bind, Pure.pure]
+  rfl
 
 theorem bind_pure {α : Type} :
-    ∀na : Nondet α, na >>= pure = na :=
-  sorry
+    ∀na : Nondet α, na >>= pure = na := by
+  intro na
+  induction na with
+  | just a =>
+    rfl
+  | fail =>
+    rfl
+  | choice k ih =>
+    simp [Pure.pure, Bind.bind, bind]
+    funext b
+    apply ih
 
 theorem bind_assoc {α β γ : Type} :
     ∀(na : Nondet α) (f : α → Nondet β) (g : β → Nondet γ),
-      ((na >>= f) >>= g) = (na >>= (fun a ↦ f a >>= g)) :=
-  sorry
+      ((na >>= f) >>= g) = (na >>= (fun a ↦ f a >>= g)) := by
+  intro na f g
+  induction na with
+  | just a =>
+    simp [Bind.bind, bind]
+  | fail =>
+    rfl
+  | choice k ih =>
+    simp [Bind.bind, Pure.pure, bind]
+    funext b
+    apply ih
+
 
 /- The function `portmanteau` computes a portmanteau of two lists: A
 portmanteau of `xs` and `ys` has `xs` as a prefix and `ys` as a suffix, and they
