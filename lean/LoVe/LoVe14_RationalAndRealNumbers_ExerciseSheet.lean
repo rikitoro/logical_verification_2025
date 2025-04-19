@@ -28,8 +28,15 @@ Hints:
 
 theorem Fraction.ext (a b : Fraction) (hnum : Fraction.num a = Fraction.num b)
       (hdenom : Fraction.denom a = Fraction.denom b) :
-    a = b :=
-  sorry
+    a = b := by
+  cases a with
+  | mk =>
+    cases b with
+    | mk =>
+      simp at *
+      apply And.intro hnum hdenom
+
+
 
 /- 1.2. Extending the `Fraction.Mul` instance from the lecture, declare
 `Fraction` as an instance of `Semigroup`.
