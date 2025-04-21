@@ -50,8 +50,13 @@ Hint: Use the theorem `Fraction.ext` above, and possibly `Fraction.mul_num` and
 
 instance Fraction.Semigroup : Semigroup Fraction :=
   { Fraction.Mul with
-    mul_assoc :=
-      sorry
+    mul_assoc := by
+      intro a b c
+      apply ext
+      . simp [mul_num]
+        ac_rfl
+      . simp [mul_denom]
+        ac_rfl
   }
 
 /- 1.3. Extending the `Rat.Mul` instance from the lecture, declare `Rat` as an
@@ -59,8 +64,10 @@ instance of `Semigroup`. -/
 
 instance Rat.Semigroup : Semigroup Rat :=
   { Rat.Mul with
-    mul_assoc :=
+    mul_assoc := by
+      intro a b c
       sorry
+
   }
 
 end LoVe
