@@ -60,8 +60,47 @@ instance Add : Add Fraction := {
 theorem Setoid_add {a a' b b' : Fraction} (ha : a ≈ a') (hb : b ≈ b') :
   a + b ≈ a' + b' := by
   simp [Setoid_Iff, add_num, add_denom] at *
-  sorry
+  -- (a.num * b.denom + b.num * a.denom) * (a'.denom * b'.denom) =
+  -- (a'.num * b'.denom + b'.num * a'.denom) * (a.denom * b.denom)
+  calc
+  _ = (a.num * b.denom + b.num * a.denom) * (a'.denom * b'.denom) := by rfl
+  _ = a.num * b.denom * (a'.denom * b'.denom) + b.num * a.denom * (a'.denom * b'.denom) := by ring
+  _ = a.num * a'.denom * b.denom * b'.denom + b.num * b'.denom * a.denom * a'.denom := by ac_rfl
+  _ = a'.num * a.denom * b.denom * b'.denom + b'.num * b.denom * a.denom * a'.denom := by simp [ha, hb]
+  _ = (a'.num * b'.denom + b'.num * a'.denom) * (a.denom * b.denom) := by ring
+
 
 end Fraction
+
+
+namespace Rat
+
+def mk : Fraction → Rat := Quotient.mk Fraction.Setoid
+
+instance Add : Add Rat := {
+  add := Quotient.lift₂ (fun a b : Fraction ↦ mk (a + b)) <| by
+    intro  a b a' b' ha hb
+    simp
+    apply Quotient.sound
+    apply Fraction.Setoid_add ha hb
+}
+
+
+
+end Rat
+
+namespace AlternativeDef
+
+-- ## Alternative Definitions of the Rational Numbers
+
+def Rat.IsCanonical (a : Fraction) : Prop :=
+  Fraction.denom a > 0 ∧
+  Nat.Coprime (Int.natAbs (Fraction.num a)) (Int.natAbs (Fraction.denom a))
+
+def Rat : Type :=
+  { a : Fraction // Rat.IsCanonical a }
+
+end AlternativeDef
+
 
 end LoVe
